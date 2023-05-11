@@ -1,0 +1,2 @@
+from findit_client.findit_client import FindItClient
+from findit_client.findit_client import __version__
