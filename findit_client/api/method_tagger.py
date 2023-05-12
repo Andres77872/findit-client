@@ -9,9 +9,13 @@ from findit_client.api.api_requests import ApiRequests
 
 
 class FindItMethodsTagger:
-    def __init__(self, __version__: str, **kwargs):
+    def __init__(self,
+                 __version__: str,
+                 private_key: str | None,
+                 **kwargs):
         self.ApiRequests = ApiRequests(**kwargs)
         self.__version__ = __version__
+        self.private_key = private_key
 
     def by_file(
             self,
@@ -28,7 +32,8 @@ class FindItMethodsTagger:
             th_general=th_general,
             mode='FILE',
             load_image_time=tm,
-            api_version=self.__version__
+            api_version=self.__version__,
+            private_key=self.private_key
         )
 
     def by_url(
@@ -46,7 +51,8 @@ class FindItMethodsTagger:
             th_general=th_general,
             mode='URL',
             load_image_time=tm,
-            api_version=self.__version__
+            api_version=self.__version__,
+            private_key=self.private_key
         )
 
     def by_image_bytes(
@@ -64,7 +70,8 @@ class FindItMethodsTagger:
             th_general=th_general,
             mode='BIN_FILE',
             load_image_time=tm,
-            api_version=self.__version__
+            api_version=self.__version__,
+            private_key=self.private_key
         )
 
     def by_booru_image_id(
@@ -85,7 +92,8 @@ class FindItMethodsTagger:
             th_general=th_general,
             mode='BOORU_IMAGE_ID',
             load_image_time=0,
-            api_version=self.__version__
+            api_version=self.__version__,
+            private_key=self.private_key
         )
 
     def by_query(
@@ -95,7 +103,9 @@ class FindItMethodsTagger:
             th_character: float = 0.8,
             th_general: float = 0.5
     ) -> TaggerResponseModel:
-        (booru_id, image_id), _ = arzypher_decoder(**X_query_arzypher_params, encoded=query)
+        (booru_id, image_id), _ = arzypher_decoder(**X_query_arzypher_params,
+                                                   encoded=query,
+                                                   private_key=self.private_key)
         return self.ApiRequests.tagger_by_booru_image_id(
             id_vector=image_id,
             pool=ID_TO_BOORU[booru_id],
@@ -104,7 +114,8 @@ class FindItMethodsTagger:
             th_general=th_general,
             mode='QUERY',
             load_image_time=0,
-            api_version=self.__version__
+            api_version=self.__version__,
+            private_key=self.private_key
         )
 
     def scroll(
@@ -117,5 +128,6 @@ class FindItMethodsTagger:
             scroll_token=scroll_token,
             mode='SCROLL',
             load_image_time=0,
-            api_version=self.__version__
+            api_version=self.__version__,
+            private_key=self.private_key
         )

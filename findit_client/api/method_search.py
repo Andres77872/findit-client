@@ -1,16 +1,20 @@
 from ArZypher import arzypher_decoder
 
 from findit_client.api.const import BOORUS_NAMES_STR, X_query_arzypher_params, ID_TO_BOORU
-from findit_client.exceptions import SearchBooruNotFound
+from findit_client.exceptions import SearchBooruNotFound, QueryCantBeDecodedException
 from findit_client.models import ImageSearchResponseModel
 from findit_client.util import load_file_image, load_url_image, load_bytes_image
 from findit_client.api.api_requests import ApiRequests
 
 
 class FindItMethodsSearch:
-    def __init__(self, __version__: str, **kwargs):
+    def __init__(self,
+                 __version__: str,
+                 private_key: str | None,
+                 **kwargs):
         self.ApiRequests = ApiRequests(**kwargs)
         self.__version__ = __version__
+        self.private_key = private_key
 
     def by_file(
             self,
@@ -27,7 +31,8 @@ class FindItMethodsSearch:
             limit=limit,
             mode='FILE',
             load_image_time=tm,
-            api_version=self.__version__
+            api_version=self.__version__,
+            private_key=self.private_key
         )
 
     def by_url(
@@ -45,7 +50,8 @@ class FindItMethodsSearch:
             limit=limit,
             mode='URL',
             load_image_time=tm,
-            api_version=self.__version__
+            api_version=self.__version__,
+            private_key=self.private_key
         )
 
     def by_image_bytes(
@@ -63,7 +69,8 @@ class FindItMethodsSearch:
             limit=limit,
             mode='BIN_FILE',
             load_image_time=tm,
-            api_version=self.__version__
+            api_version=self.__version__,
+            private_key=self.private_key
         )
 
     def by_booru_image_id(
@@ -84,7 +91,8 @@ class FindItMethodsSearch:
             limit=limit,
             mode='QUERY',
             load_image_time=0,
-            api_version=self.__version__
+            api_version=self.__version__,
+            private_key=self.private_key
         )
 
     def by_query(
@@ -95,7 +103,14 @@ class FindItMethodsSearch:
     ) -> ImageSearchResponseModel:
         if pool is None:
             pool = BOORUS_NAMES_STR
-        (booru_id, image_id), _ = arzypher_decoder(**X_query_arzypher_params, encoded=query)
+        dec, _ = arzypher_decoder(**X_query_arzypher_params,
+                                  encoded=query,
+                                  private_key=self.private_key)
+
+        if dec == [0]:
+            raise QueryCantBeDecodedException(query=query)
+        (booru_id, image_id) = dec
+
         return self.ApiRequests.search_by_booru_image_id(
             id_vector=image_id,
             pool_vector=ID_TO_BOORU[booru_id],
@@ -103,7 +118,8 @@ class FindItMethodsSearch:
             limit=limit,
             mode='QUERY',
             load_image_time=0,
-            api_version=self.__version__
+            api_version=self.__version__,
+            private_key=self.private_key
         )
 
     def by_vector(
@@ -120,7 +136,8 @@ class FindItMethodsSearch:
             limit=limit,
             mode='VECTOR',
             load_image_time=0,
-            api_version=self.__version__
+            api_version=self.__version__,
+            private_key=self.private_key
         )
 
     def scroll(
@@ -133,5 +150,6 @@ class FindItMethodsSearch:
             scroll_token=scroll_token,
             mode='SCROLL',
             load_image_time=0,
-            api_version=self.__version__
+            api_version=self.__version__,
+            private_key=self.private_key
         )

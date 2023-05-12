@@ -15,7 +15,10 @@ _IMAGE_SCORE_ = 1
 _IMAGE_BOORU_ = 2
 
 
-def build_search_response(results: dict, warning: list = [], **kwargs) -> ImageSearchResponseModel:
+def build_search_response(results: dict,
+                          private_key: str | None,
+                          warning: list = [],
+                          **kwargs) -> ImageSearchResponseModel:
     st = time.time()
     rl = []
     pool_count = [-1, -1, -1, -1, -1, -1, -1]
@@ -23,11 +26,14 @@ def build_search_response(results: dict, warning: list = [], **kwargs) -> ImageS
         _r = []
         for _p in i:
             p224, _ = arzypher_encoder(**X_image_arzypher_params,
-                                       params_data=[BOORU_TO_ID[_p[_IMAGE_BOORU_]], _p[_IMAGE_ID_], 0])
+                                       params_data=[BOORU_TO_ID[_p[_IMAGE_BOORU_]], _p[_IMAGE_ID_], 0],
+                                       private_key=private_key)
             p512, _ = arzypher_encoder(**X_image_arzypher_params,
-                                       params_data=[BOORU_TO_ID[_p[_IMAGE_BOORU_]], _p[_IMAGE_ID_], 1])
+                                       params_data=[BOORU_TO_ID[_p[_IMAGE_BOORU_]], _p[_IMAGE_ID_], 1],
+                                       private_key=private_key)
             query, _ = arzypher_encoder(**X_query_arzypher_params,
-                                        params_data=[BOORU_TO_ID[_p[_IMAGE_BOORU_]], _p[_IMAGE_ID_]])
+                                        params_data=[BOORU_TO_ID[_p[_IMAGE_BOORU_]], _p[_IMAGE_ID_]],
+                                        private_key=private_key)
             _r.append({
                 'id': _p[_IMAGE_ID_],
                 'source': BOORU_SOURCE_URL[BOORU_TO_ID[_p[_IMAGE_BOORU_]]].format(_p[_IMAGE_ID_]),
@@ -55,9 +61,13 @@ def build_search_response(results: dict, warning: list = [], **kwargs) -> ImageS
         ac[6], ok_count[6]
     ]
 
+    scroll_token, _ = arzypher_encoder(**X_scroll_arzypher_params,
+                                       params_data=ok_count,
+                                       private_key=private_key)
+
     dc = {
         'search_meta': ImageSearchResultRaw(**results),
-        'scroll_token': arzypher_encoder(**X_scroll_arzypher_params, params_data=ok_count)[0],
+        'scroll_token': scroll_token,
         'status': {
             'code': 'OK' if len(warning) == 0 else 'WARNING',
             'msg': warning
@@ -88,6 +98,7 @@ def tag_parse(r: list, threshold: float, start: int) -> list:
 
 
 def build_tagger_response(tags: list,
+                          private_key: str | None,
                           th_rating: float,
                           th_character: float,
                           th_general: float,

@@ -47,3 +47,9 @@ class SearchBooruNotFound(Exception):
     def __init__(self, booru, message="Error, booru not found"):
         self.message = message + ', booru: ' + booru + ', avaible boorus: ' + ', '.join(BOORUS_NAMES_STR)
         super().__init__(self.message)
+
+
+class QueryCantBeDecodedException(Exception):
+    def __init__(self, query, message="Error, Query cant be decoded"):
+        self.message = message + ', booru: ' + query
+        super().__init__(self.message)

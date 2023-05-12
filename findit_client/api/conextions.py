@@ -79,9 +79,12 @@ def search_scroll(
         url: str,
         scroll_token: str,
         limit: str,
+        private_key: str | None,
         **kwargs
 ) -> ImageSearchResponseModel:
-    content, _ = arzypher_decoder(**X_scroll_arzypher_params, encoded=scroll_token)
+    content, _ = arzypher_decoder(**X_scroll_arzypher_params,
+                                  encoded=scroll_token,
+                                  private_key=private_key)
 
     boorus_index = [
         content[3] if content[2] == 1 else -1,
@@ -110,6 +113,7 @@ def search_scroll(
     return build_search_response(
         results=results,
         latency_search=tm,
+        private_key=private_key,
         **kwargs
     )
 

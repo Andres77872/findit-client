@@ -1,4 +1,4 @@
-ArZypher @ git+https://github.com/Andres77872/ArZypher.git@baf881e60057a4f1cd736ca07a8e565fd2bc9886
+ArZypher @ git+https://github.com/Andres77872/ArZypher.git@0938cee9a8fd258988c83f2c717b2dfd1e7a32e2
 certifi==2023.5.7
 charset-normalizer==3.1.0
 idna==3.4
