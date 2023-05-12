@@ -15,13 +15,15 @@ class FindItMethodsUtil:
     def random_search_generator(
             self,
             pool: list[str] = None,
-            limit: int = 32
+            limit: int = 32,
+            content: str = 'g'
     ) -> ImageSearchResponseModel:
         if pool is None:
             pool = BOORUS_NAMES_STR
         return self.ApiRequests.generate_random_response(
             pool=pool,
             limit=limit,
+            content=content,
             mode='RANDOM',
             load_image_time=0,
             api_version=self.__version__,
