@@ -60,9 +60,9 @@ def random_search_request(
     if content is not None:
         g += 'content=' + content + '&'
 
-    resp = requests.get(RANDOM_GENERATOR_API_PATH)
+    resp = requests.get(RANDOM_GENERATOR_API_PATH + g)
     if resp.status_code != 200:
-        raise RemoteRawSearchException(origin=RANDOM_GENERATOR_API_PATH)
+        raise RemoteRawSearchException(origin=RANDOM_GENERATOR_API_PATH + g)
     results = resp.json()
     tm = time.time() - st
     return build_random_search_response(
