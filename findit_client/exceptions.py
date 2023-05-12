@@ -53,3 +53,9 @@ class QueryCantBeDecodedException(Exception):
     def __init__(self, query, message="Error, Query cant be decoded"):
         self.message = message + ', booru: ' + query
         super().__init__(self.message)
+
+
+class TooFewSearchResultsException(Exception):
+    def __init__(self, message="Error, Need at least 4 results"):
+        self.message = message
+        super().__init__(self.message)

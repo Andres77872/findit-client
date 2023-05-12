@@ -1,8 +1,12 @@
 import binascii
 import unittest
 from findit_client import FindItClient
-from findit_client.exceptions import RemoteRawSearchException, ImageNotFetchedException, ImageSizeTooBigException, \
-    ImageNotLoadedException, QueryCantBeDecodedException, SearchBooruNotFound
+from findit_client.exceptions import (ImageNotFetchedException,
+                                      ImageSizeTooBigException,
+                                      ImageNotLoadedException,
+                                      QueryCantBeDecodedException,
+                                      SearchBooruNotFound,
+                                      TooFewSearchResultsException)
 
 client = FindItClient(
     url_api_embedding='http://127.0.0.1:7999/',
@@ -1237,12 +1241,46 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(128, r.results.count)
 
     def test_random_search_generator_002(self):
+        r = client.util.random_search_generator(limit=0)
+
+        self.assertEqual(32, r.results.count)
+
+    def test_random_search_generator_003(self):
+        r = client.util.random_search_generator(limit=-10)
+
+        self.assertEqual(32, r.results.count)
+
+    def test_random_search_generator_004(self):
         r = client.util.random_search_generator(limit=128,
                                                 pool=['danbooru'])
 
         for i in r.results.data:
             for j in i:
                 self.assertEqual('danbooru', j.pool)
+
+    def test_masonry_000(self):
+        r = client.search.by_url(url='https://img.arz.ai', limit=16)
+        r = client.util.generate_masonry_collage(r)
+
+        self.assertEqual(3, len(r))
+        self.assertEqual(1024, max(r[0].shape))
+        self.assertEqual(512, max(r[1].shape))
+        self.assertEqual(256, max(r[2].shape))
+
+    def test_masonry_001(self):
+        r = client.search.by_url(url='https://img.arz.ai', limit=3)
+
+        with self.assertRaises(TooFewSearchResultsException) as context:
+            client.util.generate_masonry_collage(r)
+            self.assertTrue('This is broken' in context.exception)
+
+    def test_embedding_000(self):
+        r = client.util.image_encoder_by_url(url='https://img.arz.ai')
+        self.assertEqual(1024, len(r))
+
+    def test_embedding_001(self):
+        r = client.util.image_encoder_by_file(img='/home/pc/Imágenes/0Q_ofZjV')
+        self.assertEqual(1024, len(r))
 
 
 if __name__ == '__main__':

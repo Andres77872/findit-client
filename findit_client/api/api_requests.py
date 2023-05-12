@@ -114,3 +114,12 @@ class ApiRequests:
             embedding_time=tm1 + tm2,
             **kwargs
         )
+
+    def get_embedding_vector(
+            self,
+            img_array: np.ndarray,
+    ) -> list[float]:
+        vector, _ = embedding_request(
+            img_array=img_array,
+            url_api_embedding=self.url_api_embedding)
+        return vector

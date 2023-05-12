@@ -12,12 +12,13 @@ def validate_params(func):
                 total = 32
                 kwargs['limit'] = total
         if 'pool' in kwargs:
-            if (pool := kwargs['pool']) and pool is None:
-                kwargs['pool'] = BOORUS_NAMES_STR
-            else:
+            if (pool := kwargs['pool']) and pool is not None:
                 for p in pool:
                     if p not in BOORUS_NAMES_STR:
                         raise SearchBooruNotFound(booru=p)
+            else:
+                kwargs['pool'] = BOORUS_NAMES_STR
+
         if 'booru_name' in kwargs:
             if kwargs['booru_name'] not in BOORUS_NAMES_STR:
                 raise SearchBooruNotFound(booru=kwargs['booru_name'])

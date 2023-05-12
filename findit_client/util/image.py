@@ -10,7 +10,8 @@ from findit_client.exceptions import (ImageNotLoadedException,
                                       ImageNotFetchedException,
                                       ImageSizeTooBigException,
                                       ImageRemoteNotAsImageContentTypeException,
-                                      ImageRemoteNoContentLengthFoundException)
+                                      ImageRemoteNoContentLengthFoundException, TooFewSearchResultsException)
+from findit_client.models import ImageSearchResponseModel
 
 
 def resize(
@@ -68,7 +69,10 @@ def load(
     return img[None]
 
 
-def masonry(query):
+def build_masonry_collage(results: ImageSearchResponseModel) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    if results.results.count < 4:
+        raise TooFewSearchResultsException()
+
     col = [
         [0, []], [0, []], [0, []], [0, []]
     ]
@@ -81,9 +85,9 @@ def masonry(query):
 
         return cv2.resize(img, (w, h)), h
 
-    def run(image):
-        req = requests.get(image)
-        arr = np.asarray(bytearray(req.content), dtype=np.uint8)
+    def run(url):
+        rq = sess.get(url, timeout=5, stream=True)
+        arr = np.asarray(bytearray(rq.content), dtype=np.uint8)
         img = cv2.imdecode(arr, -1)
 
         input_image, h = resize_local(img)
@@ -92,16 +96,9 @@ def masonry(query):
         col[0][0] += h
         col[0][1].append(input_image / 255)
 
-    # resp = requests.post('http://127.0.0.1:5010/search/image/query',
-    resp = requests.post('https://findit.arz.ai/search/image/query',
-                         data={
-                             'query': query,
-                             'limit': 24
-                         }).json()
-
     th = []
-    for idx, i in enumerate(resp['results']['data']):
-        th.append(threading.Thread(target=run, args=[i[0]['img'] + '?access']))
+    for idx, i in enumerate(results.results.data):
+        th.append(threading.Thread(target=run, args=[i[0].img + '?access']))
         th[-1].start()
     for i in th:
         i.join()
@@ -110,68 +107,12 @@ def masonry(query):
     hm = min([hm, 1024])
     for x, i in enumerate(col):
         col[x] = np.concatenate(i[1], axis=0)[:hm]
-    col = np.concatenate(col, axis=1) * 255
+    col = np.concatenate(col, axis=1)
 
     p5 = resize_local(col, 512)[0]
     p2 = resize_local(col, 256)[0]
 
-    # print(col.shape)
-    # print(p5.shape)
-    # print(p2.shape)
-
-    # cv2.imshow('5', p5)
-    # cv2.imshow('2', p2)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
-    #
-    # s3.put_object(Body=cv2.imencode('.jpg', col)[1].tobytes(),
-    #               Bucket='arz',
-    #               Key=f'favorites/1024px/{query[:2]}/{query}.jpg')
-    # s3.put_object(Body=cv2.imencode('.jpg', p5)[1].tobytes(),
-    #               Bucket='arz',
-    #               Key=f'favorites/512px/{query[:2]}/{query}.jpg')
-    # s3.put_object(Body=cv2.imencode('.jpg', p2)[1].tobytes(),
-    #               Bucket='arz',
-    #               Key=f'favorites/256px/{query[:2]}/{query}.jpg')
-
-
-# def _load_image(image_file,
-#                 width=None,
-#                 height=None,
-#                 get_raw=False,
-#                 mode_01=True,
-#                 bgr=False,
-#                 padding=255):
-#     """
-#     :param image_file: Image as numpy array or image URL
-#     :param width: Image width destination (optional)
-#     :param height: Image height destination (optional)
-#     :param get_raw: Return the raw image
-#     :param mode_01: Normalization mode True=[0-1], False=[-1,1], None=[0-255]
-#     :param bgr: Color schema
-#     :param padding: Color padding in the resize
-#     :return: A tuple of (raw image (if selected), raw shape, resized image)
-#     """
-#     ib = None
-#     if type(image_file) == bytes:
-#         ib = image_file
-#     elif type(image_file) == str:
-#         try:
-#             scraper = cfscrape.create_scraper()
-#             rq = scraper.get(image_file, timeout=2, stream=True)
-#
-#             if int(rq.headers['Content-Length']) > 8000000 or 'image' not in rq.headers['Content-Type']:
-#                 return None, ib, 'Invalid url'
-#
-#             ib = rq.content
-#         except Exception as e:
-#             print(e)
-#             return None, ib, 'Invalid url'
-#     elif type(image_file) == np.ndarray:
-#         return img2ndarray(img=image_file, width=width, height=height, get_raw=get_raw,
-#                            mode_01=mode_01, bgr=bgr, padding=padding)
-#     return img2ndarray(img=ib, width=width, height=height, get_raw=get_raw, mode_01=mode_01,
-#                        bgr=bgr, padding=padding)
+    return col, p5, p2
 
 
 def load_file_image(image_file: str,
@@ -197,10 +138,10 @@ sess = requests.Session()
 sess.headers['User-Agent'] = 'findit.moe client -> https://findit.moe'
 
 
-def load_url_image(image_file: str,
+def load_url_image(url: str,
                    **kwargs) -> tuple[np.ndarray, float]:
     """
-    :param image_file: Image as numpy array or image URL
+    :param url: Image as numpy array or image URL
     :param width: Image width destination (optional)
     :param height: Image height destination (optional)
     :param normalization_mode: Normalization mode True=[0-1], False=[-1,1], None=[0-255]
@@ -209,23 +150,23 @@ def load_url_image(image_file: str,
     :return: A tuple of (raw image (if selected), raw shape, resized image)
     """
     st = time.time()
-    rq = sess.get(image_file, timeout=2, stream=True)
+    rq = sess.get(url, timeout=2, stream=True)
     if rq.status_code != 200:
-        raise ImageNotFetchedException(origin=image_file)
+        raise ImageNotFetchedException(origin=url)
 
     if 'image' not in rq.headers['Content-Type']:
-        raise ImageRemoteNotAsImageContentTypeException(origin=image_file)
+        raise ImageRemoteNotAsImageContentTypeException(origin=url)
     if 'Content-Length' not in rq.headers:
-        raise ImageRemoteNoContentLengthFoundException(origin=image_file)
+        raise ImageRemoteNoContentLengthFoundException(origin=url)
     if int(rq.headers['Content-Length']) > 8000000:
-        raise ImageSizeTooBigException(origin=image_file,
+        raise ImageSizeTooBigException(origin=url,
                                        limit=8000000,
                                        size=int(rq.headers['Content-Length']))
 
     arr = np.asarray(bytearray(rq.content), dtype=np.uint8)
     i = load(img=cv2.imdecode(arr, -1),
              mode='file',
-             origin=image_file,
+             origin=url,
              **kwargs)
     return i, time.time() - st
 
