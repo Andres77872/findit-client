@@ -76,11 +76,9 @@ class FindItMethodsTagger:
             th_character: float = 0.8,
             th_general: float = 0.5
     ) -> TaggerResponseModel:
-        if booru_name not in BOORUS_NAMES_STR:
-            raise SearchBooruNotFound
         return self.ApiRequests.tagger_by_booru_image_id(
             id_vector=image_id,
-            pool=booru_name,
+            booru_name=booru_name,
             th_rating=th_rating,
             th_character=th_character,
             th_general=th_general,
@@ -100,7 +98,7 @@ class FindItMethodsTagger:
                                                       encoded=query)
         return self.ApiRequests.tagger_by_booru_image_id(
             id_vector=image_id,
-            pool=ID_TO_BOORU[booru_id],
+            booru_name=ID_TO_BOORU[booru_id],
             th_rating=th_rating,
             th_character=th_character,
             th_general=th_general,

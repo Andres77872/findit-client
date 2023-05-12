@@ -20,7 +20,7 @@ class FindItMethodsUtil:
             pool = BOORUS_NAMES_STR
         return self.ApiRequests.generate_random_response(
             pool=pool,
-            total=limit,
+            limit=limit,
             content=content,
             mode='RANDOM',
             load_image_time=0,

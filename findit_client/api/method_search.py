@@ -20,8 +20,6 @@ class FindItMethodsSearch:
             pool: list[str] = None,
             limit: int = 32
     ) -> ImageSearchResponseModel:
-        if pool is None:
-            pool = BOORUS_NAMES_STR
         img_array, tm = load_file_image(img)
         return self.ApiRequests.search_by_ndarray_image_input(
             img_array=img_array,
@@ -38,8 +36,6 @@ class FindItMethodsSearch:
             pool: list[str] = None,
             limit: int = 32
     ) -> ImageSearchResponseModel:
-        if pool is None:
-            pool = BOORUS_NAMES_STR
         img_array, tm = load_url_image(url)
         return self.ApiRequests.search_by_ndarray_image_input(
             img_array=img_array,
@@ -56,8 +52,6 @@ class FindItMethodsSearch:
             pool: list[str] = None,
             limit: int = 32
     ) -> ImageSearchResponseModel:
-        if pool is None:
-            pool = BOORUS_NAMES_STR
         img_array, tm = load_bytes_image(img)
         return self.ApiRequests.search_by_ndarray_image_input(
             img_array=img_array,
@@ -75,10 +69,6 @@ class FindItMethodsSearch:
             pool: list[str] = None,
             limit: int = 32
     ) -> ImageSearchResponseModel:
-        if pool is None:
-            pool = BOORUS_NAMES_STR
-        if booru_name not in BOORUS_NAMES_STR:
-            raise SearchBooruNotFound
         return self.ApiRequests.search_by_booru_image_id(
             id_vector=image_id,
             pool_vector=booru_name,
@@ -95,8 +85,6 @@ class FindItMethodsSearch:
             pool: list[str] = None,
             limit: int = 32
     ) -> ImageSearchResponseModel:
-        if pool is None:
-            pool = BOORUS_NAMES_STR
         dec, _ = arzypher_decoder(**X_query_arzypher_params,
                                   encoded=query)
 
@@ -120,8 +108,6 @@ class FindItMethodsSearch:
             pool: list[str] = None,
             limit: int = 32
     ) -> ImageSearchResponseModel:
-        if pool is None:
-            pool = BOORUS_NAMES_STR
         return self.ApiRequests.search_by_vector_input(
             vector=vector,
             pool=pool,

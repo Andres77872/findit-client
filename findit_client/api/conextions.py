@@ -1,12 +1,13 @@
-import time
-
 import numpy as np
 import requests
 from ArZypher import arzypher_decoder
 
-from findit_client.exceptions import EmbeddingException, RemoteRawSearchException, QueryCantBeDecodedException
+from findit_client.exceptions import (EmbeddingException,
+                                      RemoteRawSearchException,
+                                      QueryCantBeDecodedException)
 from findit_client.models.model_search import ImageSearchResponseModel
-from findit_client.models.builder import build_search_response, build_random_search_response
+from findit_client.models.builder import (build_search_response,
+                                          build_random_search_response)
 from findit_client.util.image import compress_nparr, uncompress_nparr
 from findit_client.api.const import (EMBEDDING_SEARCH_API_PATH,
                                      SEARCH_BY_VECTOR_API_PATH,
@@ -18,103 +19,105 @@ from findit_client.api.const import (EMBEDDING_SEARCH_API_PATH,
                                      TAGGER_BY_VECTOR_API_PATH,
                                      BOORU_TO_ID,
                                      X_scroll_arzypher_params)
-
-
-# def wtime(func):
-#     def wrapper(*args, **kwargs):
-#         st = time.time()
-#         print(kwargs)
-#         num_sum = func(*args, **kwargs)
-#         print(time.time() - st)
-#         return num_sum
-#
-#     return wrapper
-#
+from findit_client.util.validations import validate_params
 
 sess = requests.Session()
 sess.verify = True
 sess.headers['User-Agent'] = 'findit.moe client -> https://findit.moe'
 
 
+def search_response(url: str, js: dict = None, **kwargs) -> ImageSearchResponseModel | None:
+    if (resp := sess.post(url, json=js if js else kwargs)) and resp.status_code == 200:
+        results = resp.json()
+        tm = resp.elapsed.microseconds / 1000000 - results['time']
+        return build_search_response(
+            results=results,
+            latency_search=tm,
+            **kwargs
+        )
+    return None
+
+
+def nn_model_request(url: str, nparr: np.ndarray) -> tuple[list, float] | None:
+    if (resp := sess.post(url=url, files={'obj': compress_nparr(nparr)})) and resp.status_code == 200:
+        return uncompress_nparr(resp.content)[0].tolist(), resp.elapsed.microseconds / 1000000
+    return None
+
+
 def embedding_request(
         img_array: np.ndarray,
         url_api_embedding: str
 ) -> tuple[list, float]:
-    st = time.time()
     url = url_api_embedding + EMBEDDING_SEARCH_API_PATH
-    resp = sess.post(url=url, files={'obj': compress_nparr(img_array)})
-    if resp.status_code != 200:
-        raise EmbeddingException(origin=url)
-    return uncompress_nparr(resp.content)[0].tolist(), time.time() - st
+    if (rp := nn_model_request(url, img_array)) and rp:
+        return rp
+    raise EmbeddingException(origin=url)
 
 
+def tagger_by_file_request(
+        img_array: np.ndarray,
+        url_api_embedding: str
+) -> tuple[list, float]:
+    url = url_api_embedding + TAGGER_BY_FILE_API_PATH
+    if (rp := nn_model_request(url, img_array)) and rp:
+        return rp
+    raise EmbeddingException(origin=url)
+
+
+def tagger_by_vector_request(
+        vector: np.ndarray,
+        url_api_embedding: str
+) -> tuple[list, float]:
+    url = url_api_embedding + TAGGER_BY_VECTOR_API_PATH
+    if (rp := nn_model_request(url, vector)) and rp:
+        return rp
+    raise EmbeddingException(origin=url)
+
+
+@validate_params
 def random_search_request(
-        total: int = 32,
+        limit: int = 32,
         pool: list[str] = None,
         content: str = 'g',
         **kwargs
 ) -> ImageSearchResponseModel:
-    st = time.time()
-
-    if type(total) == str:
-        total = int(total)
-    if not 0 < total <= 128:
-        total = 32
-
-    g = f'?total={total}&'
+    g = f'?total={limit}&'
     if pool is not None:
         g += 'booru=' + ','.join([str(BOORU_TO_ID[x]) for x in pool]) + '&'
     if content is not None:
         g += 'content=' + content + '&'
 
-    resp = sess.get(RANDOM_GENERATOR_API_PATH + g)
-    if resp.status_code != 200:
-        raise RemoteRawSearchException(origin=RANDOM_GENERATOR_API_PATH + g)
-    results = resp.json()
-    tm = time.time() - st
-    return build_random_search_response(
-        results=results,
-        latency_search=tm,
-        **kwargs
-    )
+    if (resp := sess.get(RANDOM_GENERATOR_API_PATH + g)) and resp.status_code == 200:
+        results = resp.json()
+        return build_random_search_response(
+            results=results,
+            latency_search=resp.elapsed.microseconds / 1000000,
+            **kwargs
+        )
+    raise RemoteRawSearchException(origin=RANDOM_GENERATOR_API_PATH + g)
 
 
+@validate_params
 def search_by_vector(
         url: str,
         **kwargs
 ) -> ImageSearchResponseModel:
-    st = time.time()
-    url = url + SEARCH_BY_VECTOR_API_PATH
-    resp = sess.post(url, json=kwargs)
-    if resp.status_code != 200:
-        raise RemoteRawSearchException(origin=url)
-    results = resp.json()
-    tm = time.time() - st - results['time']
-    return build_search_response(
-        results=results,
-        latency_search=tm,
-        **kwargs
-    )
+    if (sh := search_response(url + SEARCH_BY_VECTOR_API_PATH, **kwargs)) and sh:
+        return sh
+    raise RemoteRawSearchException(origin=url)
 
 
+@validate_params
 def search_by_id(
         url: str,
         **kwargs
 ) -> ImageSearchResponseModel:
-    st = time.time()
-    url = url + SEARCH_BY_ID_API_PATH
-    resp = sess.post(url, json=kwargs)
-    if resp.status_code != 200:
-        raise RemoteRawSearchException(origin=url)
-    results = resp.json()
-    tm = time.time() - st - results['time']
-    return build_search_response(
-        results=results,
-        latency_search=tm,
-        **kwargs
-    )
+    if (sh := search_response(url + SEARCH_BY_ID_API_PATH, **kwargs)) and sh:
+        return sh
+    raise RemoteRawSearchException(origin=url)
 
 
+@validate_params
 def search_scroll(
         url: str,
         scroll_token: str,
@@ -123,19 +126,10 @@ def search_scroll(
 ) -> ImageSearchResponseModel:
     content, _ = arzypher_decoder(**X_scroll_arzypher_params,
                                   encoded=scroll_token)
-
     if content == [0]:
         raise QueryCantBeDecodedException(query=scroll_token)
 
-    boorus_index = [
-        content[3] if content[2] == 1 else -1,
-        content[5] if content[4] == 1 else -1,
-        content[7] if content[6] == 1 else -1,
-        content[9] if content[8] == 1 else -1,
-        content[11] if content[10] == 1 else -1,
-        content[13] if content[12] == 1 else -1,
-        content[15] if content[14] == 1 else -1,
-    ]
+    boorus_index = [content[i + 1] if content[i] == 1 else -1 for i in range(2, len(content), 2)]
 
     js = {
         'vector_id': content[0],
@@ -144,54 +138,19 @@ def search_scroll(
         'boorus_index': boorus_index
     }
 
-    st = time.time()
-    url = url + SEARCH_SCROLL_API_PATH
-    resp = sess.post(url, json=js)
-    if resp.status_code != 200:
-        raise RemoteRawSearchException(origin=url)
-    results = resp.json()
-    tm = time.time() - st - results['time']
-    return build_search_response(
-        results=results,
-        latency_search=tm,
-        **kwargs
-    )
+    if (sh := search_response(url + SEARCH_SCROLL_API_PATH, js, **kwargs)) and sh:
+        return sh
+    raise RemoteRawSearchException(origin=url)
 
 
-def tagger_by_file_request(
-        img_array: np.ndarray,
-        url_api_embedding: str
-) -> tuple[list, float]:
-    st = time.time()
-    url = url_api_embedding + TAGGER_BY_FILE_API_PATH
-    resp = sess.post(url=url, files={'obj': compress_nparr(img_array)})
-    if resp.status_code != 200:
-        raise EmbeddingException(origin=url)
-    return uncompress_nparr(resp.content)[0].tolist(), time.time() - st
-
-
-def tagger_by_vector_request(
-        vector: np.ndarray,
-        url_api_embedding: str
-) -> tuple[list, float]:
-    st = time.time()
-    url = url_api_embedding + TAGGER_BY_VECTOR_API_PATH
-    resp = sess.post(url=url, files={'obj': compress_nparr(vector)})
-    if resp.status_code != 200:
-        raise EmbeddingException(origin=url)
-    return uncompress_nparr(resp.content)[0].tolist(), time.time() - st
-
-
+@validate_params
 def get_vector_by_id_request(
         url: str,
         id_vector: int,
-        pool: str
+        booru_name: str
 ) -> tuple[np.ndarray, float]:
-    st = time.time()
     url = url + EMBEDDING_GET_VECTOR_API_PATH
-    resp = sess.post(url, json={'id_vector': id_vector, 'pool': pool})
-    if resp.status_code != 200:
-        raise RemoteRawSearchException(origin=url)
-    results = resp.json()
-    tm = time.time() - st
-    return np.array(results)[None], tm
+    if (resp := sess.post(url, json={'id_vector': id_vector, 'pool': booru_name})) and resp.status_code == 200:
+        results = resp.json()
+        return np.array(results)[None], resp.elapsed.microseconds / 1000000
+    raise RemoteRawSearchException(origin=url)

@@ -2,7 +2,7 @@ import binascii
 import unittest
 from findit_client import FindItClient
 from findit_client.exceptions import RemoteRawSearchException, ImageNotFetchedException, ImageSizeTooBigException, \
-    ImageNotLoadedException, QueryCantBeDecodedException
+    ImageNotLoadedException, QueryCantBeDecodedException, SearchBooruNotFound
 
 client = FindItClient(
     url_api_embedding='http://127.0.0.1:7999/',
@@ -74,7 +74,7 @@ class MyTestCase(unittest.TestCase):
     def test_search_by_file_image_008(self):
         pool = ['danbooru', 'gelbooru', 'zerochan', 'anime-pictures', 'yandere', 'e-shuushuu', 'safebooru']
 
-        with self.assertRaises(RemoteRawSearchException) as context:
+        with self.assertRaises(SearchBooruNotFound) as context:
             client.search.by_file(img='/home/pc/Imágenes/0Q_ofZjV',
                                   pool=pool)
             self.assertTrue('This is broken' in context.exception)
@@ -1243,8 +1243,6 @@ class MyTestCase(unittest.TestCase):
         for i in r.results.data:
             for j in i:
                 self.assertEqual('danbooru', j.pool)
-
-
 
 
 if __name__ == '__main__':

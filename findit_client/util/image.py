@@ -250,7 +250,7 @@ def load_bytes_image(image_file: bytes,
     return i, time.time() - st
 
 
-def compress_nparr(nparr):
+def compress_nparr(nparr: np.ndarray):
     bytestream = io.BytesIO()
     np.save(bytestream, nparr)
     uncompressed = bytestream.getvalue()

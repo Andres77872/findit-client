@@ -1,5 +1,8 @@
 import numpy as np
 
+from findit_client.models import ImageSearchResponseModel
+from findit_client.models.builder import build_tagger_response
+from findit_client.models.model_tagger import TaggerResponseModel
 from findit_client.api.conextions import (search_by_vector,
                                           embedding_request,
                                           search_by_id,
@@ -8,9 +11,6 @@ from findit_client.api.conextions import (search_by_vector,
                                           get_vector_by_id_request,
                                           tagger_by_vector_request,
                                           random_search_request)
-from findit_client.models import ImageSearchResponseModel
-from findit_client.models.builder import build_tagger_response
-from findit_client.models.model_tagger import TaggerResponseModel
 
 
 class ApiRequests:
@@ -96,13 +96,13 @@ class ApiRequests:
     def tagger_by_booru_image_id(
             self,
             id_vector: int,
-            pool: str,
+            booru_name: str,
             **kwargs
     ) -> TaggerResponseModel:
         vector, tm1 = get_vector_by_id_request(
             url=self.url_api_back_search,
             id_vector=id_vector,
-            pool=pool
+            booru_name=booru_name
         )
 
         tags, tm2 = tagger_by_vector_request(
