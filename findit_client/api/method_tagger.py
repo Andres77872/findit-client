@@ -117,17 +117,3 @@ class FindItMethodsTagger:
             api_version=self.__version__,
             private_key=self.private_key
         )
-
-    def scroll(
-            self,
-            scroll_token: str,
-            limit: int = 32
-    ) -> ImageSearchResponseModel:
-        return self.ApiRequests.search_scroll(
-            limit=limit,
-            scroll_token=scroll_token,
-            mode='SCROLL',
-            load_image_time=0,
-            api_version=self.__version__,
-            private_key=self.private_key
-        )

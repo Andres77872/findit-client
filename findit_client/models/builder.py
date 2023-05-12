@@ -82,6 +82,61 @@ def build_search_response(results: dict,
     return ImageSearchResponseModel(**dc)
 
 
+def build_random_search_response(results: list[dict],
+                                 private_key: str | None,
+                                 warning: list = [],
+                                 **kwargs) -> ImageSearchResponseModel:
+    st = time.time()
+    rl = []
+    for _p in results:
+        _r = []
+        query, _ = arzypher_encoder(**X_query_arzypher_params,
+                                    params_data=[BOORU_TO_ID[_p['X-Booru-name']], int(_p['X-Image-Id'])],
+                                    private_key=private_key)
+        _r.append({
+            'id': _p['X-Image-Id'],
+            'source': BOORU_SOURCE_URL[BOORU_TO_ID[_p['X-Booru-name']]].format(_p['X-Image-Id']),
+            'preview': _p['url']['224'],
+            'img': _p['url']['512'],
+            'score': 0,
+            'pool': _p['X-Booru-name'],
+            'query': query
+        })
+        rl.append(_r)
+
+    dc = {
+        'search_meta': {
+            'time': 0,
+            'latency_search': 0,
+            'search_version': '0',
+            'status': {'code': 'OK', 'msg': []},
+            'time_groping': 0,
+            'qdrant_meta': {
+                'time': 0,
+                'qdrant_version': '0',
+                'status': {'code': 'OK', 'msg': []},
+                'config': {
+                    'limit': 0,
+                    'pools': [],
+                    'vector': []
+                }
+            }
+        },
+        'scroll_token': '',
+        'status': {
+            'code': 'OK' if len(warning) == 0 else 'WARNING',
+            'msg': warning
+        },
+        'post_process_time': time.time() - st,
+        'results': {
+            'count': len(rl),
+            'data': rl
+        },
+        **kwargs
+    }
+    return ImageSearchResponseModel(**dc)
+
+
 resp = requests.get('https://models.arz.ai/tags_SW_CN_V2.tf.json')
 tags = json.loads(resp.text)
 tags_id = {tags[x]: x for x in tags}

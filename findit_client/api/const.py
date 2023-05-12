@@ -4,6 +4,7 @@ EMBEDDING_GET_VECTOR_API_PATH = 'get_vector'
 SEARCH_BY_VECTOR_API_PATH = 'search_vector'
 SEARCH_BY_ID_API_PATH = 'search_id'
 SEARCH_SCROLL_API_PATH = 'search_scroll'
+RANDOM_GENERATOR_API_PATH = 'https://img.arz.ai/random'
 
 TAGGER_BY_FILE_API_PATH = 'anime_pic2tag/file'
 TAGGER_BY_VECTOR_API_PATH = 'anime_pic2tag/vector'

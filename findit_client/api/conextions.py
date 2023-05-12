@@ -6,14 +6,16 @@ from ArZypher import arzypher_decoder
 
 from findit_client.exceptions import EmbeddingException, RemoteRawSearchException
 from findit_client.models.model_search import ImageSearchResponseModel
-from findit_client.models.builder import build_search_response
+from findit_client.models.builder import build_search_response, build_random_search_response
 from findit_client.util.image import compress_nparr, uncompress_nparr
 from findit_client.api.const import (EMBEDDING_SEARCH_API_PATH,
                                      SEARCH_BY_VECTOR_API_PATH,
+                                     RANDOM_GENERATOR_API_PATH,
                                      SEARCH_BY_ID_API_PATH,
                                      SEARCH_SCROLL_API_PATH,
                                      X_scroll_arzypher_params,
-                                     TAGGER_BY_FILE_API_PATH, EMBEDDING_GET_VECTOR_API_PATH, TAGGER_BY_VECTOR_API_PATH)
+                                     TAGGER_BY_FILE_API_PATH, EMBEDDING_GET_VECTOR_API_PATH, TAGGER_BY_VECTOR_API_PATH,
+                                     ID_TO_BOORU, BOORU_TO_ID)
 
 
 # def wtime(func):
@@ -37,6 +39,37 @@ def embedding_request(
     if resp.status_code != 200:
         raise EmbeddingException(origin=url)
     return uncompress_nparr(resp.content)[0].tolist(), time.time() - st
+
+
+def random_search_request(
+        total: int = 32,
+        pool: list[str] = None,
+        content: str = 'g',
+        **kwargs
+) -> ImageSearchResponseModel:
+    st = time.time()
+
+    if type(total) == str:
+        total = int(total)
+    if not 0 < total <= 128:
+        total = 32
+
+    g = f'?total={total}&'
+    if pool is not None:
+        g += 'booru=' + ','.join([str(BOORU_TO_ID[x]) for x in pool]) + '&'
+    if content is not None:
+        g += 'content=' + content + '&'
+
+    resp = requests.get(RANDOM_GENERATOR_API_PATH)
+    if resp.status_code != 200:
+        raise RemoteRawSearchException(origin=RANDOM_GENERATOR_API_PATH)
+    results = resp.json()
+    tm = time.time() - st
+    return build_random_search_response(
+        results=results,
+        latency_search=tm,
+        **kwargs
+    )
 
 
 def search_by_vector(

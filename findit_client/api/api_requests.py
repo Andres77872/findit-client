@@ -4,7 +4,10 @@ from findit_client.api.conextions import (search_by_vector,
                                           embedding_request,
                                           search_by_id,
                                           search_scroll,
-                                          tagger_by_file_request, get_vector_by_id_request, tagger_by_vector_request)
+                                          tagger_by_file_request,
+                                          get_vector_by_id_request,
+                                          tagger_by_vector_request,
+                                          random_search_request)
 from findit_client.models import ImageSearchResponseModel
 from findit_client.models.builder import build_tagger_response
 from findit_client.models.model_tagger import TaggerResponseModel
@@ -31,6 +34,15 @@ class ApiRequests:
             url=self.url_api_back_search,
             vector=vector,
             embedding_time=tm,
+            **kwargs
+        )
+
+    def generate_random_response(
+            self,
+            **kwargs
+    ) -> ImageSearchResponseModel:
+        return random_search_request(
+            embedding_time=0,
             **kwargs
         )
 
