@@ -4,7 +4,7 @@ import numpy as np
 import requests
 from ArZypher import arzypher_decoder
 
-from findit_client.exceptions import EmbeddingException, RemoteRawSearchException
+from findit_client.exceptions import EmbeddingException, RemoteRawSearchException, QueryCantBeDecodedException
 from findit_client.models.model_search import ImageSearchResponseModel
 from findit_client.models.builder import build_search_response, build_random_search_response
 from findit_client.util.image import compress_nparr, uncompress_nparr
@@ -117,6 +117,9 @@ def search_scroll(
 ) -> ImageSearchResponseModel:
     content, _ = arzypher_decoder(**X_scroll_arzypher_params,
                                   encoded=scroll_token)
+
+    if content == [0]:
+        raise QueryCantBeDecodedException(query=scroll_token)
 
     boorus_index = [
         content[3] if content[2] == 1 else -1,

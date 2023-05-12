@@ -27,7 +27,7 @@ class ImageNotFetchedException(Exception):
 
 class ImageSizeTooBigException(Exception):
     def __init__(self, size, limit, origin, message="Error the remote image size is too big"):
-        self.message = message + ', origin: ' + origin + ', size: ' + size + ', limit: ' + limit
+        self.message = message + ', origin: ' + origin + ', size: ' + str(size) + ', limit: ' + str(limit)
         super().__init__(self.message)
 
 
