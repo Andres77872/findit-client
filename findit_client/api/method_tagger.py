@@ -1,8 +1,7 @@
 from ArZypher import arzypher_decoder
 
-from findit_client.api.const import BOORUS_NAMES_STR, ID_TO_BOORU, X_query_arzypher_params_
+from findit_client.api.const import BOORUS_NAMES_STR, ID_TO_BOORU, X_image_arzypher_params
 from findit_client.exceptions import SearchBooruNotFound
-from findit_client.models import ImageSearchResponseModel
 from findit_client.models.model_tagger import TaggerResponseModel
 from findit_client.util import load_file_image, load_url_image, load_bytes_image
 from findit_client.api.api_requests import ApiRequests
@@ -97,8 +96,8 @@ class FindItMethodsTagger:
             th_character: float = 0.8,
             th_general: float = 0.5
     ) -> TaggerResponseModel:
-        (booru_id, image_id), _ = arzypher_decoder(**X_query_arzypher_params_,
-                                                   encoded=query)
+        (booru_id, image_id, _), _ = arzypher_decoder(**X_image_arzypher_params,
+                                                      encoded=query)
         return self.ApiRequests.tagger_by_booru_image_id(
             id_vector=image_id,
             pool=ID_TO_BOORU[booru_id],

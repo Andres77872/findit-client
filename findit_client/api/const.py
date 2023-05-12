@@ -50,7 +50,7 @@ BOORU_SOURCE_URL = [
     'https://safebooru.org/index.php?page=post&s=view&id={0}'
 ]
 
-X_query_arzypher_params_ = {
+X_query_arzypher_params = {
     'random_key': None,
     'check_sum': 64,
     'params_keys': [8, 24],  # booru_ID, image_ID
@@ -67,7 +67,7 @@ X_query_arzypher_params_ = {
 }
 """
 
-X_image_arzypher_params_ = {
+X_image_arzypher_params = {
     'random_key': None,
     'check_sum': 15,
     'params_keys': [8, 24, 1],  # booru_ID, image_ID
@@ -77,14 +77,14 @@ X_image_arzypher_params_ = {
 """
 {
     'random_key': None, \n
-    'check_sum': 16, \n
-    'params_keys': [8, 24],  # booru_ID, image_ID \n
+    'check_sum': 15, \n
+    'params_keys': [8, 24, 1],  # booru_ID, image_ID \n
     'padding': None, \n
     'private_key': None
 }
 """
 
-X_scroll_arzypher_params_ = {
+X_scroll_arzypher_params = {
     'random_key': 32,
     'check_sum': 256,
     'params_keys': [32,  # ID

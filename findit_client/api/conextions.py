@@ -16,7 +16,7 @@ from findit_client.api.const import (EMBEDDING_SEARCH_API_PATH,
                                      TAGGER_BY_FILE_API_PATH,
                                      EMBEDDING_GET_VECTOR_API_PATH,
                                      TAGGER_BY_VECTOR_API_PATH,
-                                     BOORU_TO_ID, X_scroll_arzypher_params_)
+                                     BOORU_TO_ID, X_scroll_arzypher_params)
 
 
 # def wtime(func):
@@ -115,7 +115,7 @@ def search_scroll(
         limit: str,
         **kwargs
 ) -> ImageSearchResponseModel:
-    content, _ = arzypher_decoder(**X_scroll_arzypher_params_,
+    content, _ = arzypher_decoder(**X_scroll_arzypher_params,
                                   encoded=scroll_token)
 
     boorus_index = [
