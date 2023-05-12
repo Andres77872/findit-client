@@ -21,7 +21,7 @@ class FindItMethodsSearch:
         if pool is None:
             pool = BOORUS_NAMES_STR
         img_array, tm = load_file_image(img)
-        return self.ApiRequests.search_by_ndarray_input(
+        return self.ApiRequests.search_by_ndarray_image_input(
             img_array=img_array,
             pool=pool,
             limit=limit,
@@ -39,7 +39,7 @@ class FindItMethodsSearch:
         if pool is None:
             pool = BOORUS_NAMES_STR
         img_array, tm = load_url_image(url)
-        return self.ApiRequests.search_by_ndarray_input(
+        return self.ApiRequests.search_by_ndarray_image_input(
             img_array=img_array,
             pool=pool,
             limit=limit,
@@ -57,7 +57,7 @@ class FindItMethodsSearch:
         if pool is None:
             pool = BOORUS_NAMES_STR
         img_array, tm = load_bytes_image(img)
-        return self.ApiRequests.search_by_ndarray_input(
+        return self.ApiRequests.search_by_ndarray_image_input(
             img_array=img_array,
             pool=pool,
             limit=limit,
@@ -102,6 +102,23 @@ class FindItMethodsSearch:
             pool=pool,
             limit=limit,
             mode='QUERY',
+            load_image_time=0,
+            api_version=self.__version__
+        )
+
+    def by_vector(
+            self,
+            vector: list,
+            pool: list[str] = None,
+            limit: int = 32
+    ) -> ImageSearchResponseModel:
+        if pool is None:
+            pool = BOORUS_NAMES_STR
+        return self.ApiRequests.search_by_vector_input(
+            vector=vector,
+            pool=pool,
+            limit=limit,
+            mode='VECTOR',
             load_image_time=0,
             api_version=self.__version__
         )

@@ -19,7 +19,7 @@ class ApiRequests:
         self.url_api_embedding = url_api_embedding
         self.url_api_back_search = url_api_back_search
 
-    def search_by_ndarray_input(
+    def search_by_ndarray_image_input(
             self,
             img_array: np.ndarray,
             **kwargs
@@ -31,6 +31,18 @@ class ApiRequests:
             url=self.url_api_back_search,
             vector=vector,
             embedding_time=tm,
+            **kwargs
+        )
+
+    def search_by_vector_input(
+            self,
+            vector: list,
+            **kwargs
+    ) -> ImageSearchResponseModel:
+        return search_by_vector(
+            url=self.url_api_back_search,
+            vector=vector,
+            embedding_time=0,
             **kwargs
         )
 
