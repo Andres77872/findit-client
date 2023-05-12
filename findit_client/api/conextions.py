@@ -16,7 +16,8 @@ from findit_client.api.const import (EMBEDDING_SEARCH_API_PATH,
                                      TAGGER_BY_FILE_API_PATH,
                                      EMBEDDING_GET_VECTOR_API_PATH,
                                      TAGGER_BY_VECTOR_API_PATH,
-                                     BOORU_TO_ID, X_scroll_arzypher_params)
+                                     BOORU_TO_ID,
+                                     X_scroll_arzypher_params)
 
 
 # def wtime(func):
@@ -30,13 +31,18 @@ from findit_client.api.const import (EMBEDDING_SEARCH_API_PATH,
 #     return wrapper
 #
 
+sess = requests.Session()
+sess.verify = True
+sess.headers['User-Agent'] = 'findit.moe client -> https://findit.moe'
+
+
 def embedding_request(
         img_array: np.ndarray,
         url_api_embedding: str
 ) -> tuple[list, float]:
     st = time.time()
     url = url_api_embedding + EMBEDDING_SEARCH_API_PATH
-    resp = requests.post(url=url, files={'obj': compress_nparr(img_array)})
+    resp = sess.post(url=url, files={'obj': compress_nparr(img_array)})
     if resp.status_code != 200:
         raise EmbeddingException(origin=url)
     return uncompress_nparr(resp.content)[0].tolist(), time.time() - st
@@ -61,7 +67,7 @@ def random_search_request(
     if content is not None:
         g += 'content=' + content + '&'
 
-    resp = requests.get(RANDOM_GENERATOR_API_PATH + g)
+    resp = sess.get(RANDOM_GENERATOR_API_PATH + g)
     if resp.status_code != 200:
         raise RemoteRawSearchException(origin=RANDOM_GENERATOR_API_PATH + g)
     results = resp.json()
@@ -79,7 +85,7 @@ def search_by_vector(
 ) -> ImageSearchResponseModel:
     st = time.time()
     url = url + SEARCH_BY_VECTOR_API_PATH
-    resp = requests.post(url, json=kwargs)
+    resp = sess.post(url, json=kwargs)
     if resp.status_code != 200:
         raise RemoteRawSearchException(origin=url)
     results = resp.json()
@@ -97,7 +103,7 @@ def search_by_id(
 ) -> ImageSearchResponseModel:
     st = time.time()
     url = url + SEARCH_BY_ID_API_PATH
-    resp = requests.post(url, json=kwargs)
+    resp = sess.post(url, json=kwargs)
     if resp.status_code != 200:
         raise RemoteRawSearchException(origin=url)
     results = resp.json()
@@ -140,7 +146,7 @@ def search_scroll(
 
     st = time.time()
     url = url + SEARCH_SCROLL_API_PATH
-    resp = requests.post(url, json=js)
+    resp = sess.post(url, json=js)
     if resp.status_code != 200:
         raise RemoteRawSearchException(origin=url)
     results = resp.json()
@@ -158,7 +164,7 @@ def tagger_by_file_request(
 ) -> tuple[list, float]:
     st = time.time()
     url = url_api_embedding + TAGGER_BY_FILE_API_PATH
-    resp = requests.post(url=url, files={'obj': compress_nparr(img_array)})
+    resp = sess.post(url=url, files={'obj': compress_nparr(img_array)})
     if resp.status_code != 200:
         raise EmbeddingException(origin=url)
     return uncompress_nparr(resp.content)[0].tolist(), time.time() - st
@@ -170,7 +176,7 @@ def tagger_by_vector_request(
 ) -> tuple[list, float]:
     st = time.time()
     url = url_api_embedding + TAGGER_BY_VECTOR_API_PATH
-    resp = requests.post(url=url, files={'obj': compress_nparr(vector)})
+    resp = sess.post(url=url, files={'obj': compress_nparr(vector)})
     if resp.status_code != 200:
         raise EmbeddingException(origin=url)
     return uncompress_nparr(resp.content)[0].tolist(), time.time() - st
@@ -183,7 +189,7 @@ def get_vector_by_id_request(
 ) -> tuple[np.ndarray, float]:
     st = time.time()
     url = url + EMBEDDING_GET_VECTOR_API_PATH
-    resp = requests.post(url, json={'id_vector': id_vector, 'pool': pool})
+    resp = sess.post(url, json={'id_vector': id_vector, 'pool': pool})
     if resp.status_code != 200:
         raise RemoteRawSearchException(origin=url)
     results = resp.json()
