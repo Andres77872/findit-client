@@ -6,11 +6,9 @@ from findit_client.api.api_requests import ApiRequests
 class FindItMethodsUtil:
     def __init__(self,
                  __version__: str,
-                 private_key: str | None,
                  **kwargs):
         self.ApiRequests = ApiRequests(**kwargs)
         self.__version__ = __version__
-        self.private_key = private_key
 
     def random_search_generator(
             self,
@@ -26,6 +24,5 @@ class FindItMethodsUtil:
             content=content,
             mode='RANDOM',
             load_image_time=0,
-            api_version=self.__version__,
-            private_key=self.private_key
+            api_version=self.__version__
         )

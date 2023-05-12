@@ -13,9 +13,10 @@ from findit_client.api.const import (EMBEDDING_SEARCH_API_PATH,
                                      RANDOM_GENERATOR_API_PATH,
                                      SEARCH_BY_ID_API_PATH,
                                      SEARCH_SCROLL_API_PATH,
-                                     X_scroll_arzypher_params,
-                                     TAGGER_BY_FILE_API_PATH, EMBEDDING_GET_VECTOR_API_PATH, TAGGER_BY_VECTOR_API_PATH,
-                                     ID_TO_BOORU, BOORU_TO_ID)
+                                     TAGGER_BY_FILE_API_PATH,
+                                     EMBEDDING_GET_VECTOR_API_PATH,
+                                     TAGGER_BY_VECTOR_API_PATH,
+                                     BOORU_TO_ID, X_scroll_arzypher_params_)
 
 
 # def wtime(func):
@@ -112,12 +113,10 @@ def search_scroll(
         url: str,
         scroll_token: str,
         limit: str,
-        private_key: str | None,
         **kwargs
 ) -> ImageSearchResponseModel:
-    content, _ = arzypher_decoder(**X_scroll_arzypher_params,
-                                  encoded=scroll_token,
-                                  private_key=private_key)
+    content, _ = arzypher_decoder(**X_scroll_arzypher_params_,
+                                  encoded=scroll_token)
 
     boorus_index = [
         content[3] if content[2] == 1 else -1,
@@ -146,7 +145,6 @@ def search_scroll(
     return build_search_response(
         results=results,
         latency_search=tm,
-        private_key=private_key,
         **kwargs
     )
 

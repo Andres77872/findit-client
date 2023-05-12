@@ -50,37 +50,41 @@ BOORU_SOURCE_URL = [
     'https://safebooru.org/index.php?page=post&s=view&id={0}'
 ]
 
-X_query_arzypher_params = {
+X_query_arzypher_params_ = {
     'random_key': None,
     'check_sum': 64,
     'params_keys': [8, 24],  # booru_ID, image_ID
-    'padding': None
+    'padding': None,
+    'private_key': None
 }
 """
 {
     'random_key': None, \n
     'check_sum': 32, \n
     'params_keys': [8, 24],  # booru_ID, image_ID \n
-    'padding': None 
+    'padding': None, \n
+    'private_key': None
 }
 """
 
-X_image_arzypher_params = {
+X_image_arzypher_params_ = {
     'random_key': None,
     'check_sum': 15,
     'params_keys': [8, 24, 1],  # booru_ID, image_ID
-    'padding': None
+    'padding': None,
+    'private_key': None
 }
 """
 {
     'random_key': None, \n
     'check_sum': 16, \n
     'params_keys': [8, 24],  # booru_ID, image_ID \n
-    'padding': None 
+    'padding': None, \n
+    'private_key': None
 }
 """
 
-X_scroll_arzypher_params = {
+X_scroll_arzypher_params_ = {
     'random_key': 32,
     'check_sum': 256,
     'params_keys': [32,  # ID
@@ -92,7 +96,8 @@ X_scroll_arzypher_params = {
                     8, 16,  # [YANDE.RE, COUNT]
                     8, 16,  # [E-SHUUSHUU, COUNT]
                     8, 16],  # [SAFEBOORU, COUNT]
-    'padding': None
+    'padding': None,
+    'private_key': None
 }
 """
 {
@@ -107,6 +112,7 @@ X_scroll_arzypher_params = {
                     8, 16,  # [YANDE.RE, COUNT] \n
                     8, 16,  # [E-SHUUSHUU, COUNT] \n
                     8, 16],  # [SAFEBOORU, COUNT] \n
-    'padding': None
+    'padding': None, \n
+    'private_key': None
 }
 """

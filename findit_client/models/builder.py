@@ -4,8 +4,8 @@ import time
 import requests
 from ArZypher import arzypher_encoder
 
-from findit_client.api.const import BOORU_TO_ID, BOORU_SOURCE_URL, URL_IMAGE_PROVIDER, X_image_arzypher_params, \
-    X_query_arzypher_params, X_scroll_arzypher_params
+from findit_client.api.const import BOORU_TO_ID, BOORU_SOURCE_URL, URL_IMAGE_PROVIDER, X_image_arzypher_params_, \
+    X_query_arzypher_params_, X_scroll_arzypher_params_
 from findit_client.models import ImageSearchResponseModel
 from findit_client.models.model_search import ImageSearchResultRaw
 from findit_client.models.model_tagger import TaggerResponseModel
@@ -16,7 +16,6 @@ _IMAGE_BOORU_ = 2
 
 
 def build_search_response(results: dict,
-                          private_key: str | None,
                           warning: list = [],
                           **kwargs) -> ImageSearchResponseModel:
     st = time.time()
@@ -25,15 +24,12 @@ def build_search_response(results: dict,
     for i in results['results']['data']:
         _r = []
         for _p in i:
-            p224, _ = arzypher_encoder(**X_image_arzypher_params,
-                                       params_data=[BOORU_TO_ID[_p[_IMAGE_BOORU_]], _p[_IMAGE_ID_], 0],
-                                       private_key=private_key)
-            p512, _ = arzypher_encoder(**X_image_arzypher_params,
-                                       params_data=[BOORU_TO_ID[_p[_IMAGE_BOORU_]], _p[_IMAGE_ID_], 1],
-                                       private_key=private_key)
-            query, _ = arzypher_encoder(**X_query_arzypher_params,
-                                        params_data=[BOORU_TO_ID[_p[_IMAGE_BOORU_]], _p[_IMAGE_ID_]],
-                                        private_key=private_key)
+            p224, _ = arzypher_encoder(**X_image_arzypher_params_,
+                                       params_data=[BOORU_TO_ID[_p[_IMAGE_BOORU_]], _p[_IMAGE_ID_], 0])
+            p512, _ = arzypher_encoder(**X_image_arzypher_params_,
+                                       params_data=[BOORU_TO_ID[_p[_IMAGE_BOORU_]], _p[_IMAGE_ID_], 1])
+            query, _ = arzypher_encoder(**X_query_arzypher_params_,
+                                        params_data=[BOORU_TO_ID[_p[_IMAGE_BOORU_]], _p[_IMAGE_ID_]])
             _r.append({
                 'id': _p[_IMAGE_ID_],
                 'source': BOORU_SOURCE_URL[BOORU_TO_ID[_p[_IMAGE_BOORU_]]].format(_p[_IMAGE_ID_]),
@@ -61,9 +57,8 @@ def build_search_response(results: dict,
         ac[6], ok_count[6]
     ]
 
-    scroll_token, _ = arzypher_encoder(**X_scroll_arzypher_params,
-                                       params_data=ok_count,
-                                       private_key=private_key)
+    scroll_token, _ = arzypher_encoder(**X_scroll_arzypher_params_,
+                                       params_data=ok_count)
 
     dc = {
         'search_meta': ImageSearchResultRaw(**results),
@@ -83,16 +78,14 @@ def build_search_response(results: dict,
 
 
 def build_random_search_response(results: list[dict],
-                                 private_key: str | None,
                                  warning: list = [],
                                  **kwargs) -> ImageSearchResponseModel:
     st = time.time()
     rl = []
     for _p in results:
         _r = []
-        query, _ = arzypher_encoder(**X_query_arzypher_params,
-                                    params_data=[BOORU_TO_ID[_p['X-Booru-name']], int(_p['X-Image-Id'])],
-                                    private_key=private_key)
+        query, _ = arzypher_encoder(**X_query_arzypher_params_,
+                                    params_data=[BOORU_TO_ID[_p['X-Booru-name']], int(_p['X-Image-Id'])])
         _r.append({
             'id': _p['X-Image-Id'],
             'source': BOORU_SOURCE_URL[BOORU_TO_ID[_p['X-Booru-name']]].format(_p['X-Image-Id']),
@@ -153,7 +146,6 @@ def tag_parse(r: list, threshold: float, start: int) -> list:
 
 
 def build_tagger_response(tags: list,
-                          private_key: str | None,
                           th_rating: float,
                           th_character: float,
                           th_general: float,
