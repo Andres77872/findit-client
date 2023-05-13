@@ -11,7 +11,8 @@ from findit_client.exceptions import (ImageNotFetchedException,
 client = FindItClient(
     url_api_embedding='http://127.0.0.1:7999/',
     url_api_back_search='https://search.arz.ai/',
-    private_key=''
+    private_key='',
+    __ChatGPT_TOKEN__=''
 )
 
 
@@ -1282,6 +1283,15 @@ class MyTestCase(unittest.TestCase):
         r = client.util.image_encoder_by_file(img='/home/pc/Imágenes/0Q_ofZjV')
         self.assertEqual(1024, len(r))
 
+    def test_chatgpt_generator_001(self):
+        r = client.tagger.by_booru_image_id(booru_name='danbooru',
+                                            image_id=5781904)
+        print(client.util.generate_nl_sentense_from_image_query(r))
 
-if __name__ == '__main__':
-    unittest.main()
+    def test_X(self):
+        r = client.tagger.by_booru_image_id(booru_name='danbooru',
+                                            image_id=5781904)
+        print(', '.join([x.tag + ' : ' + str(round(x.score, 4)) for x in r.results.data.general]))
+
+    if __name__ == '__main__':
+        unittest.main()
