@@ -139,6 +139,14 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
 
     def test_search_scroll_001(self):
+        r = client.search.by_url(url='https://img.arz.ai', limit=32)
+        for i in range(10):
+            r = client.search.scroll(
+                scroll_token=r.scroll_token,
+                limit=32)
+        # self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
+
+    def test_search_scroll_002(self):
         with self.assertRaises(QueryCantBeDecodedException) as context:
             r = client.search.scroll(
                 scroll_token='-9UhbKolbEFF2tnLD92XFi6w8trohvWcJJbHhHzOKgWCemuTmGP8fS90FMWhuXf6hq0fZIr-GImSlqNTB-WW')

@@ -17,10 +17,11 @@ _IMAGE_BOORU_ = 2
 
 def build_search_response(results: dict,
                           warning: list = [],
+                          scroll_content: list = None,
                           **kwargs) -> ImageSearchResponseModel:
     st = time.time()
     rl = []
-    pool_count = [-1, -1, -1, -1, -1, -1, -1]
+    pool_count = [-1, -1, -1, -1, -1, -1, -1] if scroll_content is None else scroll_content
     for i in results['results']['data']:
         _r = []
         for _p in i:
@@ -42,7 +43,7 @@ def build_search_response(results: dict,
             pool_count[BOORU_TO_ID[_p[_IMAGE_BOORU_]]] += 1
         rl.append(_r)
 
-    ok_count = [0 if x == -1 else x + 1 for x in pool_count]
+    ok_count = [0 if x == -1 else x for x in pool_count]
     ac = [0 if x == -1 else 1 for x in pool_count]
 
     ok_count = [
