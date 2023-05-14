@@ -1296,6 +1296,18 @@ class MyTestCase(unittest.TestCase):
                                             image_id=5781904)
         print(client.util.generate_nl_sentense_from_image_query(r))
 
+    def test_search_by_string_000(self):
+        pool = ['danbooru']
+        limit = 32
+        r = client.search.by_text(text='a fox girl',
+                                  limit=limit,
+                                  pool=pool)
+
+        print(r.json())
+
+        # self.assertEqual(limit, r.search_meta.qdrant_meta.config.limit)
+        # self.assertEqual(pool, r.search_meta.qdrant_meta.config.pools)
+
     def test_X(self):
         r = client.tagger.by_booru_image_id(booru_name='danbooru',
                                             image_id=5781904)

@@ -117,6 +117,22 @@ class FindItMethodsSearch:
             api_version=self.__version__
         )
 
+    def by_text(
+            self,
+            text: str,
+            pool: list[str] = None,
+            limit: int = 32
+    ) -> ImageSearchResponseModel:
+        return self.ApiRequests.search_by_string(
+            use_sem=True,
+            text=text,
+            pool=pool,
+            limit=limit,
+            mode='TEXT',
+            load_image_time=0,
+            api_version=self.__version__
+        )
+
     def scroll(
             self,
             scroll_token: str,

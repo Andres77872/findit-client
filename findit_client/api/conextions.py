@@ -18,7 +18,8 @@ from findit_client.api.const import (EMBEDDING_SEARCH_API_PATH,
                                      EMBEDDING_GET_VECTOR_API_PATH,
                                      TAGGER_BY_VECTOR_API_PATH,
                                      BOORU_TO_ID,
-                                     X_scroll_arzypher_params)
+                                     X_scroll_arzypher_params,
+                                     EMBEDDING_GET_VECTOR_TEXT_API_PATH)
 from findit_client.util.validations import validate_params
 
 sess = requests.Session()
@@ -29,9 +30,13 @@ sess.headers['User-Agent'] = 'findit.moe client -> https://findit.moe'
 def search_response(url: str,
                     js: dict = None,
                     scroll_content: list = None,
+                    use_sem: bool = False,
                     **kwargs) -> ImageSearchResponseModel | None:
-    if (resp := sess.post(url, json=js if js else kwargs)) and resp.status_code == 200:
+    j = js if js else kwargs
+    j['use_sem'] = use_sem
+    if (resp := sess.post(url, json=j)) and resp.status_code == 200:
         results = resp.json()
+        # print(results)
         tm = resp.elapsed.microseconds / 1000000 - results['time']
         return build_search_response(
             results=results,
@@ -55,6 +60,16 @@ def embedding_request(
     url = url_api_embedding + EMBEDDING_SEARCH_API_PATH
     if (rp := nn_model_request(url, img_array)) and rp:
         return rp
+    raise EmbeddingException(origin=url)
+
+
+def embedding_text_request(
+        text: str,
+        url_api_embedding: str
+) -> tuple[list, float]:
+    url = url_api_embedding + EMBEDDING_GET_VECTOR_TEXT_API_PATH
+    if (resp := sess.post(url=url, data={'text': text})) and resp.status_code == 200:
+        return resp.json(), resp.elapsed.microseconds / 1000000
     raise EmbeddingException(origin=url)
 
 
@@ -103,6 +118,16 @@ def random_search_request(
 
 @validate_params
 def search_by_vector(
+        url: str,
+        **kwargs
+) -> ImageSearchResponseModel:
+    if (sh := search_response(url + SEARCH_BY_VECTOR_API_PATH, **kwargs)) and sh:
+        return sh
+    raise RemoteRawSearchException(origin=url)
+
+
+@validate_params
+def search_by_string_request(
         url: str,
         **kwargs
 ) -> ImageSearchResponseModel:

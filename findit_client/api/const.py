@@ -1,6 +1,8 @@
 EMBEDDING_SEARCH_API_PATH = 'pic2encoder'
 EMBEDDING_GET_VECTOR_API_PATH = 'get_vector'
 
+EMBEDDING_GET_VECTOR_TEXT_API_PATH = 'pic2encoder_clip_text'
+
 SEARCH_BY_VECTOR_API_PATH = 'search_vector'
 SEARCH_BY_ID_API_PATH = 'search_id'
 SEARCH_SCROLL_API_PATH = 'search_scroll'
@@ -22,6 +24,7 @@ BOORUS_NAMES_STR = [
 
 BOORU_TO_ID = {
     'danbooru': 0,
+    'sem_danbooru': 0,
     'gelbooru': 1,
     'zerochan': 2,
     'anime-pictures': 3,
