@@ -1297,7 +1297,7 @@ class MyTestCase(unittest.TestCase):
         print(client.util.generate_nl_sentense_from_image_query(r))
 
     def test_search_by_string_000(self):
-        pool = ['danbooru']
+        pool = ['danbooru', 'zerochan', 'gelbooru']
         limit = 32
         r = client.search.by_text(text='a fox girl',
                                   limit=limit,

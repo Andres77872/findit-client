@@ -26,11 +26,17 @@ BOORU_TO_ID = {
     'danbooru': 0,
     'sem_danbooru': 0,
     'gelbooru': 1,
+    'sem_gelbooru': 1,
     'zerochan': 2,
+    'sem_zerochan': 2,
     'anime-pictures': 3,
+    'sem_anime-pictures': 3,
     'yande.re': 4,
+    'sem_yande.re': 4,
     'e-shuushuu': 5,
-    'safebooru': 6
+    'sem_e-shuushuu': 5,
+    'safebooru': 6,
+    'sem_safebooru': 6,
 }
 
 ID_TO_BOORU = {
