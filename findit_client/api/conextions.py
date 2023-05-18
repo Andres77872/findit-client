@@ -158,11 +158,14 @@ def search_scroll(
     if content == [0]:
         raise QueryCantBeDecodedException(query=scroll_token)
 
+    # print(content)
+
     boorus_index = [content[i + 1] if content[i] == 1 else -1 for i in range(2, len(content), 2)]
 
-    scroll_content = [content[i + 1] if content[i] == 1 else 0 for i in range(2, len(content), 2)]
+    # scroll_content = [content[i + 1] if content[i] == 1 else 0 for i in range(2, len(content), 2)]
 
     # print(boorus_index)
+    # print(scroll_content)
 
     js = {
         'vector_id': content[0],
@@ -173,7 +176,7 @@ def search_scroll(
 
     # print(js)
 
-    if (sh := search_response(url + SEARCH_SCROLL_API_PATH, js, scroll_content, **kwargs)) and sh:
+    if (sh := search_response(url + SEARCH_SCROLL_API_PATH, js, boorus_index, **kwargs)) and sh:
         return sh
     raise RemoteRawSearchException(origin=url)
 
