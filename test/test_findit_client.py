@@ -1303,10 +1303,19 @@ class MyTestCase(unittest.TestCase):
                                   limit=limit,
                                   pool=pool)
 
-        print(r.json())
+        self.assertEqual(limit, r.search_meta.qdrant_meta.config.limit)
+        self.assertEqual(['sem_danbooru', 'sem_zerochan', 'sem_gelbooru'], r.search_meta.qdrant_meta.config.pools)
 
-        # self.assertEqual(limit, r.search_meta.qdrant_meta.config.limit)
-        # self.assertEqual(pool, r.search_meta.qdrant_meta.config.pools)
+    def test_search_by_string_scroll_000(self):
+        pool = ['danbooru', 'zerochan', 'gelbooru']
+        limit = 32
+        r = client.search.by_text(text='a fox girl',
+                                  limit=limit,
+                                  pool=pool)
+        r = client.search.scroll(r.scroll_token, limit=limit)
+
+        self.assertEqual(limit, r.search_meta.qdrant_meta.config.limit)
+        self.assertEqual(['sem_danbooru', 'sem_gelbooru', 'sem_zerochan'], r.search_meta.qdrant_meta.config.pools)
 
     def test_X(self):
         r = client.tagger.by_booru_image_id(booru_name='danbooru',

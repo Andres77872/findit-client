@@ -171,6 +171,8 @@ def search_scroll(
         'boorus_index': boorus_index
     }
 
+    # print(js)
+
     if (sh := search_response(url + SEARCH_SCROLL_API_PATH, js, scroll_content, **kwargs)) and sh:
         return sh
     raise RemoteRawSearchException(origin=url)
