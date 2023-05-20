@@ -5,8 +5,8 @@ __version__ = '0.2.1'
 
 class FindItClient(FindItBase):
 
-    def __init__(self, url_api_embedding: str,
-                 url_api_back_search: str,
+    def __init__(self, url_api_embedding: str = 'http://127.0.0.1:7999/',
+                 url_api_back_search: str = 'https://search.arz.ai/',
                  private_key: str | None = None,
                  __ChatGPT_TOKEN__: str = None):
         super().__init__(url_api_embedding=url_api_embedding,

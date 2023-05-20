@@ -9,7 +9,7 @@ from findit_client.exceptions import (ImageNotFetchedException,
                                       TooFewSearchResultsException)
 
 client = FindItClient(
-    url_api_embedding='http://127.0.0.1:7999/',
+    url_api_embedding='https://nn.arz.ai/',
     url_api_back_search='https://search.arz.ai/',
     private_key='',
     __ChatGPT_TOKEN__=''

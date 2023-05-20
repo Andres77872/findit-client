@@ -11,7 +11,12 @@ RANDOM_GENERATOR_API_PATH = 'https://img.arz.ai/random'
 TAGGER_BY_FILE_API_PATH = 'anime_pic2tag/file'
 TAGGER_BY_VECTOR_API_PATH = 'anime_pic2tag/vector'
 
-URL_IMAGE_PROVIDER = 'https://img.arz.ai'
+URL_IMAGE_PROVIDER = [
+    'https://img-s4.arz.ai',
+    'https://img-s5.arz.ai',
+    'https://img-s6.arz.ai',
+    'https://img-s7.arz.ai',
+]
 
 BOORUS_NAMES_STR = [
     'danbooru',

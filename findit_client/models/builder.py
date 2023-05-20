@@ -1,4 +1,5 @@
 import json
+import secrets
 import time
 
 import requests
@@ -34,8 +35,8 @@ def build_search_response(results: dict,
             _r.append({
                 'id': _p[_IMAGE_ID_],
                 'source': BOORU_SOURCE_URL[BOORU_TO_ID[_p[_IMAGE_BOORU_]]].format(_p[_IMAGE_ID_]),
-                'preview': f'{URL_IMAGE_PROVIDER}/{p224}',
-                'img': f'{URL_IMAGE_PROVIDER}/{p512}',
+                'preview': f'{secrets.choice(URL_IMAGE_PROVIDER)}/{p224}',
+                'img': f'{secrets.choice(URL_IMAGE_PROVIDER)}/{p512}',
                 'score': _p[_IMAGE_SCORE_],
                 'pool': _p[_IMAGE_BOORU_],
                 'query': query
