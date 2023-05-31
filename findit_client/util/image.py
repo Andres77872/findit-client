@@ -43,7 +43,7 @@ def load(
         width: int = 448,
         height: int = 448,
         normalization_mode: bool | None = None,
-        color_schema_rgb: bool = True,
+        color_schema_rgb: bool = False,
         padding_color: int = 255,
         mode: str = None,
         origin: str = None

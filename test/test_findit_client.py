@@ -158,6 +158,12 @@ class MyTestCase(unittest.TestCase):
                                             limit=32)
         self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
 
+    def test_search_by_booru_image_id_001(self):
+        r = client.search.by_booru_image_id(image_id=3950483,
+                                            booru_name='zerochan',
+                                            limit=32)
+        self.assertEqual(0, len(r.results.data))
+
     def test_search_by_vector_000(self):
         r = client.search.by_vector(vector=[
             -0.12229436,
