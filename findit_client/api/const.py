@@ -17,7 +17,7 @@ URL_IMAGE_PROVIDER = [
     'https://img-s6.arz.ai',
     'https://img-s7.arz.ai',
     'https://img-s8.arz.ai',
-    'https://img-s7.arz.ai',
+    'https://img-s9.arz.ai',
 ]
 
 BOORUS_NAMES_STR = [
