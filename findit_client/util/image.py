@@ -12,6 +12,7 @@ from findit_client.exceptions import (ImageNotLoadedException,
                                       ImageRemoteNotAsImageContentTypeException,
                                       ImageRemoteNoContentLengthFoundException, TooFewSearchResultsException)
 from findit_client.models import ImageSearchResponseModel
+from findit_client.util.pixiv import check_login, login_in, get_image
 
 
 def resize(
@@ -139,6 +140,7 @@ sess.headers['User-Agent'] = 'findit.moe client -> https://findit.moe'
 
 
 def load_url_image(url: str,
+                   pixiv_credentials: dict = None,
                    **kwargs) -> tuple[np.ndarray, float]:
     """
     :param url: Image as numpy array or image URL
@@ -150,7 +152,13 @@ def load_url_image(url: str,
     :return: A tuple of (raw image (if selected), raw shape, resized image)
     """
     st = time.time()
-    rq = sess.get(url, timeout=2, stream=True)
+
+    if url.startswith('https://i.pximg.net'):
+        if not check_login():
+            login_in(**pixiv_credentials)
+        rq = get_image(url=url)
+    else:
+        rq = sess.get(url, timeout=2, stream=True)
     if rq.status_code != 200:
         raise ImageNotFetchedException(origin=url)
 

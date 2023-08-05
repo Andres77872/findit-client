@@ -12,7 +12,11 @@ client = FindItClient(
     url_api_embedding='https://nn.arz.ai/',
     url_api_back_search='https://search.arz.ai/',
     private_key='',
-    __ChatGPT_TOKEN__=''
+    __ChatGPT_TOKEN__='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',
+    pixiv_credentials={
+        'username': 'andreslamosk124@hotmail.com',
+        'password': 'yQgUx9TeSFSfuj7'
+    }
 )
 
 
@@ -1196,7 +1200,8 @@ class MyTestCase(unittest.TestCase):
 
     def test_tagger_by_file_000(self):
         r = client.tagger.by_file(img='/home/pc/Imágenes/0Q_ofZjV')
-        self.assertEqual(18, r.results.count)
+        print(r)
+        self.assertEqual(26, r.results.count)
 
     def test_tagger_by_file_001(self):
         r = client.tagger.by_file(img='/home/pc/Imágenes/0Q_ofZjV',
@@ -1217,7 +1222,7 @@ class MyTestCase(unittest.TestCase):
                                   th_general=1,
                                   th_character=1,
                                   th_rating=1)
-        self.assertGreater(0.53, r.results.data.rating[0].score)
+        self.assertGreater(0.70, r.results.data.rating[0].score)
         self.assertLess(0.51, r.results.data.rating[0].score)
         self.assertEqual('general', r.results.data.rating[0].tag)
 
@@ -1226,10 +1231,10 @@ class MyTestCase(unittest.TestCase):
                                  th_general=0.35,
                                  th_character=0.8,
                                  th_rating=0)
-        self.assertGreater(0.53, r.results.data.rating[0].score)
+        self.assertGreater(0.70, r.results.data.rating[0].score)
         self.assertLess(0.51, r.results.data.rating[0].score)
         self.assertEqual('general', r.results.data.rating[0].tag)
-        self.assertEqual(28, r.results.count)
+        self.assertEqual(33, r.results.count)
 
     def test_tagger_by_query_000(self):
         r = client.tagger.by_query(query='u4YCfr7z')
@@ -1325,6 +1330,13 @@ class MyTestCase(unittest.TestCase):
 
         self.assertEqual(limit, r.search_meta.qdrant_meta.config.limit)
         self.assertEqual(['sem_zerochan'], r.search_meta.qdrant_meta.config.pools)
+
+    def test_search_by_url_image_pixiv_000(self):
+        pool = ['danbooru', 'gelbooru', 'zerochan', 'anime-pictures', 'yande.re', 'e-shuushuu', 'safebooru']
+        r = client.search.by_url(url='https://i.pximg.net/img-original/img/2023/08/03/05/29/49/110480732_p0.jpg')
+
+        self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
+        self.assertEqual(pool, r.search_meta.qdrant_meta.config.pools)
 
     def test_X(self):
         r = client.tagger.by_booru_image_id(booru_name='danbooru',

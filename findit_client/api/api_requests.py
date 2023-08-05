@@ -17,7 +17,8 @@ class ApiRequests:
     def __init__(
             self,
             url_api_embedding: str,
-            url_api_back_search: str
+            url_api_back_search: str,
+            **kwargs
     ):
         self.url_api_embedding = url_api_embedding
         self.url_api_back_search = url_api_back_search

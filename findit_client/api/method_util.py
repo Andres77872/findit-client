@@ -13,9 +13,11 @@ class FindItMethodsUtil:
     def __init__(self,
                  __version__: str,
                  __ChatGPT_TOKEN__: str,
+                 pixiv_credentials: dict,
                  **kwargs):
         self.ApiRequests = ApiRequests(**kwargs)
         self.__version__ = __version__
+        self.pixiv_credentials = pixiv_credentials
         openai.api_key = __ChatGPT_TOKEN__
 
     def random_search_generator(
@@ -44,7 +46,8 @@ class FindItMethodsUtil:
             self,
             url: str,
     ) -> list[float]:
-        img_array, _ = load_url_image(url)
+        img_array, _ = load_url_image(url=url,
+                                      pixiv_credentials=self.pixiv_credentials)
         return self.ApiRequests.get_embedding_vector(img_array)
 
     def image_encoder_by_image_bytes(
