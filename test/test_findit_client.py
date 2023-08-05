@@ -12,11 +12,7 @@ client = FindItClient(
     url_api_embedding='https://nn.arz.ai/',
     url_api_back_search='https://search.arz.ai/',
     private_key='',
-    __ChatGPT_TOKEN__='',
-    pixiv_credentials={
-        'username': '',
-        'password': ''
-    }
+    __ChatGPT_TOKEN__=''
 )
 
 

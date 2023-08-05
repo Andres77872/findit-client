@@ -9,7 +9,7 @@ class FindItClient(FindItBase):
                  url_api_back_search: str = 'https://search.arz.ai/',
                  private_key: str | None = None,
                  __ChatGPT_TOKEN__: str = None,
-                 pixiv_credentials: dict = None):
+                 pixiv_credentials: dict = {'username': '', 'pasword': ''}):
         super().__init__(url_api_embedding=url_api_embedding,
                          url_api_back_search=url_api_back_search,
                          private_key=private_key,
