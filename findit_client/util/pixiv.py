@@ -1,11 +1,6 @@
 import requests
-import re
-import os
-import json
 import http.cookiejar
-import cv2
 from bs4 import BeautifulSoup
-import numpy as np
 
 post_url = "https://accounts.pixiv.net/login?lang=zh&source=pc&view_type=page&ref=wwwtop_accounts_index"
 
@@ -74,7 +69,7 @@ def get_image(url: str):
     return rq
 
 
-login_in('andreslamosk124@hotmail.com', 'yQgUx9TeSFSfuj7')
+# login_in('andreslamosk124@hotmail.com', 'yQgUx9TeSFSfuj7')
 
 
 
