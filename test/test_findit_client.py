@@ -15,12 +15,13 @@ client = FindItClient(
     __ChatGPT_TOKEN__=''
 )
 
+local_file = '/home/andres/Imágenes/0Q_ofZjV'
 
 class MyTestCase(unittest.TestCase):
     def test_search_by_file_image_001(self):
         pool = ['danbooru', 'gelbooru']
         limit = 32
-        r = client.search.by_file(img='/home/pc/Imágenes/0Q_ofZjV',
+        r = client.search.by_file(img=local_file,
                                   limit=limit,
                                   pool=pool)
         self.assertEqual(limit, r.search_meta.qdrant_meta.config.limit)
@@ -29,7 +30,7 @@ class MyTestCase(unittest.TestCase):
     def test_search_by_file_image_002(self):
         pool = ['danbooru', 'gelbooru']
         limit = 128
-        r = client.search.by_file(img='/home/pc/Imágenes/0Q_ofZjV',
+        r = client.search.by_file(img=local_file,
                                   limit=limit,
                                   pool=pool)
         self.assertEqual(limit, r.search_meta.qdrant_meta.config.limit)
@@ -38,7 +39,7 @@ class MyTestCase(unittest.TestCase):
     def test_search_by_file_image_003(self):
         pool = ['danbooru', 'gelbooru']
         limit = 129
-        r = client.search.by_file(img='/home/pc/Imágenes/0Q_ofZjV',
+        r = client.search.by_file(img=local_file,
                                   limit=limit,
                                   pool=pool)
         self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
@@ -47,7 +48,7 @@ class MyTestCase(unittest.TestCase):
     def test_search_by_file_image_004(self):
         pool = ['danbooru', 'gelbooru']
         limit = 0
-        r = client.search.by_file(img='/home/pc/Imágenes/0Q_ofZjV',
+        r = client.search.by_file(img=local_file,
                                   limit=limit,
                                   pool=pool)
         self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
@@ -56,7 +57,7 @@ class MyTestCase(unittest.TestCase):
     def test_search_by_file_image_005(self):
         pool = ['danbooru', 'gelbooru', 'zerochan', 'anime-pictures', 'e-shuushuu', 'yande.re', 'safebooru']
         limit = 32
-        r = client.search.by_file(img='/home/pc/Imágenes/0Q_ofZjV',
+        r = client.search.by_file(img=local_file,
                                   limit=limit,
                                   pool=pool)
         self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
@@ -65,14 +66,14 @@ class MyTestCase(unittest.TestCase):
     def test_search_by_file_image_006(self):
         pool = ['danbooru', 'gelbooru', 'zerochan', 'anime-pictures', 'yande.re', 'e-shuushuu', 'safebooru']
         limit = 32
-        r = client.search.by_file(img='/home/pc/Imágenes/0Q_ofZjV',
+        r = client.search.by_file(img=local_file,
                                   limit=limit)
         self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
         self.assertEqual(pool, r.search_meta.qdrant_meta.config.pools)
 
     def test_search_by_file_image_007(self):
         pool = ['danbooru', 'gelbooru', 'zerochan', 'anime-pictures', 'yande.re', 'e-shuushuu', 'safebooru']
-        r = client.search.by_file(img='/home/pc/Imágenes/0Q_ofZjV')
+        r = client.search.by_file(img=local_file)
         self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
         self.assertEqual(pool, r.search_meta.qdrant_meta.config.pools)
 
@@ -80,7 +81,7 @@ class MyTestCase(unittest.TestCase):
         pool = ['danbooru', 'gelbooru', 'zerochan', 'anime-pictures', 'yandere', 'e-shuushuu', 'safebooru']
 
         with self.assertRaises(SearchBooruNotFound) as context:
-            client.search.by_file(img='/home/pc/Imágenes/0Q_ofZjV',
+            client.search.by_file(img=local_file,
                                   pool=pool)
             self.assertTrue('This is broken' in context.exception)
 
@@ -154,7 +155,7 @@ class MyTestCase(unittest.TestCase):
 
     def test_search_by_booru_image_id_000(self):
         r = client.search.by_booru_image_id(image_id=1,
-                                            booru_name='danbooru',
+                                            booru_name='gelbooru',
                                             limit=32)
         self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
 
@@ -1195,26 +1196,26 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
 
     def test_tagger_by_file_000(self):
-        r = client.tagger.by_file(img='/home/pc/Imágenes/0Q_ofZjV')
+        r = client.tagger.by_file(img=local_file)
         print(r)
         self.assertEqual(26, r.results.count)
 
     def test_tagger_by_file_001(self):
-        r = client.tagger.by_file(img='/home/pc/Imágenes/0Q_ofZjV',
+        r = client.tagger.by_file(img=local_file,
                                   th_general=0,
                                   th_character=0,
                                   th_rating=0)
         self.assertEqual(9083, r.results.count)
 
     def test_tagger_by_file_002(self):
-        r = client.tagger.by_file(img='/home/pc/Imágenes/0Q_ofZjV',
+        r = client.tagger.by_file(img=local_file,
                                   th_general=1,
                                   th_character=1,
                                   th_rating=1)
         self.assertEqual(1, r.results.count)
 
     def test_tagger_by_file_003(self):
-        r = client.tagger.by_file(img='/home/pc/Imágenes/0Q_ofZjV',
+        r = client.tagger.by_file(img=local_file,
                                   th_general=1,
                                   th_character=1,
                                   th_rating=1)
@@ -1240,11 +1241,11 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(26, r.results.count)
 
     def test_tagger_by_booru_image_id_000(self):
-        r = client.tagger.by_booru_image_id(booru_name='danbooru', image_id=1)
-        self.assertGreater(0.88, r.results.data.rating[0].score)
+        r = client.tagger.by_booru_image_id(booru_name='gelbooru', image_id=1)
+        self.assertGreater(0.95, r.results.data.rating[0].score)
         self.assertLess(0.87, r.results.data.rating[0].score)
         self.assertEqual('sensitive', r.results.data.rating[0].tag)
-        self.assertEqual(45, r.results.count)
+        self.assertEqual(12, r.results.count)
 
     def test_random_search_generator_000(self):
         r = client.util.random_search_generator()
@@ -1295,12 +1296,12 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(1024, len(r))
 
     def test_embedding_001(self):
-        r = client.util.image_encoder_by_file(img='/home/pc/Imágenes/0Q_ofZjV')
+        r = client.util.image_encoder_by_file(img=local_file)
         self.assertEqual(1024, len(r))
 
     def test_chatgpt_generator_001(self):
-        r = client.tagger.by_booru_image_id(booru_name='danbooru',
-                                            image_id=5781904)
+        r = client.tagger.by_booru_image_id(booru_name='gelbooru',
+                                            image_id=1)
         print(client.util.generate_nl_sentense_from_image_query(r))
 
     def test_search_by_string_000(self):
@@ -1334,9 +1335,23 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
         self.assertEqual(pool, r.search_meta.qdrant_meta.config.pools)
 
+    def test_search_by_url_image_pixiv_001(self):
+        r2 = client.util.generate_md5(
+            url='https://i.pximg.net/img-original/img/2023/08/03/05/29/49/110480732_p0.jpg')
+
+        self.assertEqual('8de186e88781d7550827011a67f19fdb', r2)
+
+    def test_pixiv_download_original_by_id_002(self):
+        r = client.util.download_pixiv_image(idx=110480732)
+
+        with open('/mnt/RAID0/res/booru/gelbooru/tmp/a.zip', 'wb') as f:
+            f.write(r)
+
+
+
     def test_X(self):
-        r = client.tagger.by_booru_image_id(booru_name='danbooru',
-                                            image_id=5781904)
+        r = client.tagger.by_booru_image_id(booru_name='gelbooru',
+                                            image_id=1)
         print(', '.join([x.tag + ' : ' + str(round(x.score, 4)) for x in r.results.data.general]))
 
     if __name__ == '__main__':

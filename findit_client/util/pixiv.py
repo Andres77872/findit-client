@@ -1,6 +1,7 @@
 import requests
 import http.cookiejar
 from bs4 import BeautifulSoup
+import json
 
 post_url = "https://accounts.pixiv.net/login?lang=zh&source=pc&view_type=page&ref=wwwtop_accounts_index"
 
@@ -69,7 +70,20 @@ def get_image(url: str):
     return rq
 
 
-# login_in('andreslamosk124@hotmail.com', 'yQgUx9TeSFSfuj7')
+session_raw = requests.session()
 
 
-
+def get_pixiv_image_url(idx: int):
+    ptr = 'https://i.pximg.net/img-original/img/'
+    r = session_raw.get(f'https://www.pixiv.net/en/artworks/{idx}')
+    soup = BeautifulSoup(r.content, 'lxml')
+    f = soup.find('meta', {'id': 'meta-preload-data'})
+    d = json.loads(f['content'])
+    url_base = d['illust'][str(idx)]['userIllusts'][str(idx)]['url']
+    url_count = d['illust'][str(idx)]['userIllusts'][str(idx)]['pageCount']
+    url_org = []
+    for i in range(url_count):
+        url_org.append(
+            (f'{idx}_p{i}.png', ptr + ('/'.join(url_base.split('/')[7:]).split('p0')[0][:-1] + f'_p{i}.png'))
+        )
+    return url_org

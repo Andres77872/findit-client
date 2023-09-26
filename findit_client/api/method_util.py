@@ -1,5 +1,6 @@
 import numpy as np
 
+from findit_client.exceptions import ImageNotFetchedException
 from findit_client.models import ImageSearchResponseModel
 from findit_client.api.api_requests import ApiRequests
 from findit_client.models.model_tagger import TaggerResponseModel
@@ -7,6 +8,9 @@ from findit_client.util import load_file_image, load_url_image, load_bytes_image
 
 from findit_client.util.image import build_masonry_collage
 import openai
+
+from findit_client.util.pixiv import get_pixiv_image_url
+from findit_client.util.zip_file import zip_file
 
 
 class FindItMethodsUtil:
@@ -74,7 +78,9 @@ class FindItMethodsUtil:
         
         [{tags}]
         
-        write a Natural Language sentence using all tags considering the importance of the tag the number after the :
+        write a Natural Language sentence using all tags considering the importance of the tag after the :
+        
+        dont respond with the tags, only with a descriptions dont show the scores
         """
         messages = [{"role": "system", "content": "You are a helpful assistant."},
                     {"role": "user",
@@ -86,3 +92,28 @@ class FindItMethodsUtil:
         )
 
         return resp['choices'][0]['message']['content']
+
+    def generate_md5(self,
+                     url: str) -> str:
+        chk = load_url_image(url=url,
+                             checksum=True,
+                             pixiv_credentials=self.pixiv_credentials)
+        return chk
+
+    def download_pixiv_image(self,
+                             idx: int):
+        def retry(n, u):
+            for i in ['.png', '.jpg', '.jpeg']:
+                try:
+                    r = load_url_image(url=u.replace('.png', i),
+                                       get_raw_content=True,
+                                       pixiv_credentials=self.pixiv_credentials)
+                except ImageNotFetchedException:
+                    continue
+                return n.replace('.png', i), r
+
+        urls = get_pixiv_image_url(idx)
+        data = []
+        for name, url in urls:
+            data.append(retry(name, url))
+        return zip_file(data)

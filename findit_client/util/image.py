@@ -5,6 +5,7 @@ import numpy as np
 import cv2
 import threading
 import requests
+import hashlib
 
 from findit_client.exceptions import (ImageNotLoadedException,
                                       ImageNotFetchedException,
@@ -141,7 +142,9 @@ sess.headers['User-Agent'] = 'findit.moe client -> https://findit.moe'
 
 def load_url_image(url: str,
                    pixiv_credentials: dict = None,
-                   **kwargs) -> tuple[np.ndarray, float]:
+                   checksum=False,
+                   get_raw_content: bool = False,
+                   **kwargs) -> tuple[np.ndarray, float] | str | bytes:
     """
     :param url: Image as numpy array or image URL
     :param width: Image width destination (optional)
@@ -170,6 +173,12 @@ def load_url_image(url: str,
         raise ImageSizeTooBigException(origin=url,
                                        limit=8000000,
                                        size=int(rq.headers['Content-Length']))
+
+    if get_raw_content:
+        return rq.content
+
+    if checksum:
+        return hashlib.md5(bytearray(rq.content)).hexdigest()
 
     arr = np.asarray(bytearray(rq.content), dtype=np.uint8)
     i = load(img=cv2.imdecode(arr, -1),
