@@ -9,7 +9,7 @@ from findit_client.util import load_file_image, load_url_image, load_bytes_image
 from findit_client.util.image import build_masonry_collage
 import openai
 
-from findit_client.util.pixiv import get_pixiv_image_url
+from findit_client.util.pixiv import get_pixiv_image_url, get_crawler_image
 from findit_client.util.zip_file import zip_file
 
 
@@ -101,19 +101,24 @@ class FindItMethodsUtil:
         return chk
 
     def download_pixiv_image(self,
-                             idx: int):
-        def retry(n, u):
-            for i in ['.png', '.jpg', '.jpeg']:
-                try:
-                    r = load_url_image(url=u.replace('.png', i),
-                                       get_raw_content=True,
-                                       pixiv_credentials=self.pixiv_credentials)
-                except ImageNotFetchedException:
-                    continue
-                return n.replace('.png', i), r
-
+                             idx: int,
+                             token: str = None
+                             ):
         urls = get_pixiv_image_url(idx)
-        data = []
-        for name, url in urls:
-            data.append(retry(name, url))
+        if token is None:
+            def retry(n, u):
+                for i in ['.png', '.jpg', '.jpeg']:
+                    try:
+                        r = load_url_image(url=u.replace('.png', i),
+                                           get_raw_content=True,
+                                           pixiv_credentials=self.pixiv_credentials)
+                    except ImageNotFetchedException:
+                        continue
+                    return n.replace('.png', i), r
+
+            data = []
+            for name, url in urls:
+                data.append(retry(name, url))
+        else:
+            data = get_crawler_image(url=urls, token=token)
         return zip_file(data)

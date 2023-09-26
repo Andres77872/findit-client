@@ -2,6 +2,7 @@ import requests
 import http.cookiejar
 from bs4 import BeautifulSoup
 import json
+import concurrent.futures
 
 post_url = "https://accounts.pixiv.net/login?lang=zh&source=pc&view_type=page&ref=wwwtop_accounts_index"
 
@@ -10,7 +11,8 @@ headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36',
     'Referer': 'https://www.pixiv.net/'}
 session.headers = headers
-session.cookies = http.cookiejar.LWPCookieJar(filename="pixiv_cookies")
+cookies = http.cookiejar.LWPCookieJar(filename="pixiv_cookies")
+session.cookies = cookies
 
 params = {
     "lang": "zh",
@@ -71,6 +73,29 @@ def get_image(url: str):
 
 
 session_raw = requests.session()
+
+
+def download(u, t):
+    for i in ['.png', '.jpg', '.jpeg']:
+        _u = u[1].replace('.png', i)
+        res = session_raw.post(f'https://crawler.arz.ai/',
+                               headers={'token-access': t,
+                                        'accept': 'application/json',
+                                        'Content-Type': 'application/x-www-form-urlencoded'},
+                               data={'url': _u,
+                                     'headers': json.dumps(headers, ensure_ascii=True),
+                                     # 'cookies': cookies
+                                     },
+                               stream=True)
+        if res.status_code == 200:
+            return u[0].replace('.png', i), res.content
+    return None
+
+
+def get_crawler_image(url: list, token: str):
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        resultados = list(executor.map(download, url, [token] * len(url)))
+    return [x for x in resultados if x is not None]
 
 
 def get_pixiv_image_url(idx: int):

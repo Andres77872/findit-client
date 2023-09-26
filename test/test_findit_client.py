@@ -1342,7 +1342,8 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual('8de186e88781d7550827011a67f19fdb', r2)
 
     def test_pixiv_download_original_by_id_002(self):
-        r = client.util.download_pixiv_image(idx=110480732)
+        # r = client.util.download_pixiv_image(idx=110480732, token='TOKEN')
+        r = client.util.download_pixiv_image(idx=110480732, token=None)
 
         with open('/mnt/RAID0/res/booru/gelbooru/tmp/a.zip', 'wb') as f:
             f.write(r)
