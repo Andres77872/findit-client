@@ -1,4 +1,5 @@
 import binascii
+import os
 import unittest
 from findit_client import FindItClient
 from findit_client.exceptions import (ImageNotFetchedException,
@@ -12,10 +13,11 @@ client = FindItClient(
     url_api_embedding='https://nn.arz.ai/',
     url_api_back_search='https://search.arz.ai/',
     private_key='',
-    __ChatGPT_TOKEN__=''
+    __ChatGPT_TOKEN__=os.environ['T']
 )
 
 local_file = '/home/andres/Imágenes/0Q_ofZjV'
+
 
 class MyTestCase(unittest.TestCase):
     def test_search_by_file_image_001(self):
@@ -1336,7 +1338,7 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(pool, r.search_meta.qdrant_meta.config.pools)
 
     def test_search_by_url_image_pixiv_001(self):
-        r2 = client.util.generate_md5(
+        r2 = client.util.generate_md5_by_url(
             url='https://i.pximg.net/img-original/img/2023/08/03/05/29/49/110480732_p0.jpg')
 
         self.assertEqual('8de186e88781d7550827011a67f19fdb', r2)
@@ -1345,10 +1347,8 @@ class MyTestCase(unittest.TestCase):
         # r = client.util.download_pixiv_image(idx=110480732, token='TOKEN')
         r = client.util.download_pixiv_image(idx=110480732, token=None)
 
-        with open('/mnt/RAID0/res/booru/gelbooru/tmp/a.zip', 'wb') as f:
+        with open('/mnt/RAID0/temp/a.zip', 'wb') as f:
             f.write(r)
-
-
 
     def test_X(self):
         r = client.tagger.by_booru_image_id(booru_name='gelbooru',

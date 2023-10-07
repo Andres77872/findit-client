@@ -1,3 +1,5 @@
+import hashlib
+
 import numpy as np
 
 from findit_client.exceptions import ImageNotFetchedException
@@ -93,12 +95,17 @@ class FindItMethodsUtil:
 
         return resp['choices'][0]['message']['content']
 
-    def generate_md5(self,
-                     url: str) -> str:
-        chk = load_url_image(url=url,
-                             checksum=True,
-                             pixiv_credentials=self.pixiv_credentials)
-        return chk
+    def generate_md5_by_url(self,
+                            url: str) -> str:
+        content = load_url_image(url=url,
+                                 get_raw_content=True,
+                                 pixiv_credentials=self.pixiv_credentials)
+        return hashlib.md5(bytearray(content)).hexdigest()
+
+    def generate_md5_by_file(self,
+                             image_file: bytes) -> str:
+
+        return hashlib.md5(bytearray(image_file)).hexdigest()
 
     def download_pixiv_image(self,
                              idx: int,

@@ -142,7 +142,6 @@ sess.headers['User-Agent'] = 'findit.moe client -> https://findit.moe'
 
 def load_url_image(url: str,
                    pixiv_credentials: dict = None,
-                   checksum=False,
                    get_raw_content: bool = False,
                    **kwargs) -> tuple[np.ndarray, float] | str | bytes:
     """
@@ -176,9 +175,6 @@ def load_url_image(url: str,
 
     if get_raw_content:
         return rq.content
-
-    if checksum:
-        return hashlib.md5(bytearray(rq.content)).hexdigest()
 
     arr = np.asarray(bytearray(rq.content), dtype=np.uint8)
     i = load(img=cv2.imdecode(arr, -1),
