@@ -12,12 +12,13 @@ TAGGER_BY_FILE_API_PATH = 'anime_pic2tag/file'
 TAGGER_BY_VECTOR_API_PATH = 'anime_pic2tag/vector'
 
 URL_IMAGE_PROVIDER = [
-    'https://img-s4.arz.ai',
-    'https://img-s5.arz.ai',
-    'https://img-s6.arz.ai',
-    'https://img-s7.arz.ai',
-    'https://img-s8.arz.ai',
-    'https://img-s9.arz.ai',
+    'https://img.arz.ai',
+    # 'https://img-s4.arz.ai',
+    # 'https://img-s5.arz.ai',
+    # 'https://img-s6.arz.ai',
+    # 'https://img-s7.arz.ai',
+    # 'https://img-s8.arz.ai',
+    # 'https://img-s9.arz.ai',
 ]
 
 BOORUS_NAMES_STR = [
@@ -27,33 +28,30 @@ BOORUS_NAMES_STR = [
     'anime-pictures',
     'yande.re',
     'e-shuushuu',
-    'safebooru']
+    'safebooru',
+    'konachan'
+]
 
 BOORU_TO_ID = {
-    'danbooru': 0,
-    'sem_danbooru': 0,
-    'gelbooru': 1,
-    'sem_gelbooru': 1,
-    'zerochan': 2,
-    'sem_zerochan': 2,
-    'anime-pictures': 3,
-    'sem_anime-pictures': 3,
-    'yande.re': 4,
-    'sem_yande.re': 4,
-    'e-shuushuu': 5,
-    'sem_e-shuushuu': 5,
-    'safebooru': 6,
-    'sem_safebooru': 6,
+    'danbooru': 1,
+    'gelbooru': 2,
+    'zerochan': 3,
+    'anime-pictures': 4,
+    'yande.re': 5,
+    'e-shuushuu': 6,
+    'safebooru': 7,
+    'konachan': 8,
 }
 
 ID_TO_BOORU = {
-    0: 'danbooru',
-    1: 'gelbooru',
-    2: 'zerochan',
-    3: 'anime-pictures',
-    4: 'yande.re',
-    5: 'e-shuushuu',
-    6: 'safebooru'
+    1: 'danbooru',
+    2: 'gelbooru',
+    3: 'zerochan',
+    4: 'anime-pictures',
+    5: 'yande.re',
+    6: 'e-shuushuu',
+    7: 'safebooru',
+    8: 'konachan'
 }
 
 BOORU_SOURCE_URL = [
@@ -63,7 +61,8 @@ BOORU_SOURCE_URL = [
     'https://anime-pictures.net/posts/{0}',
     'https://yande.re/post/show/{0}',
     'https://e-shuushuu.net/image/{0}',
-    'https://safebooru.org/index.php?page=post&s=view&id={0}'
+    'https://safebooru.org/index.php?page=post&s=view&id={0}',
+    'https://konachan.com/post/show/{0}'
 ]
 
 X_query_arzypher_params = {
@@ -85,8 +84,8 @@ X_query_arzypher_params = {
 
 X_image_arzypher_params = {
     'random_key': None,
-    'check_sum': 15,
-    'params_keys': [8, 24, 1],  # booru_ID, image_ID
+    'check_sum': 18,
+    'params_keys': [28, 2],  # file_id, image_size
     'padding': None,
     'private_key': None
 }
@@ -105,13 +104,7 @@ X_scroll_arzypher_params = {
     'check_sum': 256,
     'params_keys': [32,  # ID
                     16,  # COUNT
-                    8, 16,  # [DANBOORU, COUNT]
-                    8, 16,  # [GELBOORU, COUNT]
-                    8, 16,  # [ZEROCHAN, COUNT]
-                    8, 16,  # [ANIME-PICTURES, COUNT]
-                    8, 16,  # [YANDE.RE, COUNT]
-                    8, 16,  # [E-SHUUSHUU, COUNT]
-                    8, 16],  # [SAFEBOORU, COUNT]
+                    ],
     'padding': None,
     'private_key': None
 }

@@ -1,6 +1,6 @@
 from ArZypher import arzypher_decoder
 
-from findit_client.api.const import ID_TO_BOORU, X_query_arzypher_params
+from findit_client.api.const import ID_TO_BOORU, X_query_arzypher_params, BOORUS_NAMES_STR
 from findit_client.exceptions import QueryCantBeDecodedException
 from findit_client.models import ImageSearchResponseModel
 from findit_client.util import load_file_image, load_url_image, load_bytes_image
@@ -87,7 +87,6 @@ class FindItMethodsSearch:
     ) -> ImageSearchResponseModel:
         dec, _ = arzypher_decoder(**X_query_arzypher_params,
                                   encoded=query)
-
         if dec == [0]:
             raise QueryCantBeDecodedException(query=query)
         (booru_id, image_id) = dec

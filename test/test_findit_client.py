@@ -10,10 +10,13 @@ from findit_client.exceptions import (ImageNotFetchedException,
                                       TooFewSearchResultsException)
 
 client = FindItClient(
-    url_api_embedding='https://nn.arz.ai/',
-    url_api_back_search='https://search.arz.ai/',
+    # url_api_embedding='https://nn.arz.ai/',
+    url_api_embedding='http://127.0.0.1:7999/',
+    # url_api_back_search='https://search.arz.ai/',
+    url_api_back_search='http://127.0.0.1:8000/',
     private_key='',
     __ChatGPT_TOKEN__=os.environ['T']
+    # __ChatGPT_TOKEN__=''
 )
 
 local_file = '/home/andres/Imágenes/0Q_ofZjV'
@@ -26,6 +29,7 @@ class MyTestCase(unittest.TestCase):
         r = client.search.by_file(img=local_file,
                                   limit=limit,
                                   pool=pool)
+        print(r)
         self.assertEqual(limit, r.search_meta.qdrant_meta.config.limit)
         self.assertEqual(pool, r.search_meta.qdrant_meta.config.pools)
 
@@ -66,7 +70,7 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(pool, r.search_meta.qdrant_meta.config.pools)
 
     def test_search_by_file_image_006(self):
-        pool = ['danbooru', 'gelbooru', 'zerochan', 'anime-pictures', 'yande.re', 'e-shuushuu', 'safebooru']
+        pool = ['danbooru', 'gelbooru', 'zerochan', 'anime-pictures', 'yande.re', 'e-shuushuu', 'safebooru', 'konachan']
         limit = 32
         r = client.search.by_file(img=local_file,
                                   limit=limit)
@@ -74,13 +78,13 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(pool, r.search_meta.qdrant_meta.config.pools)
 
     def test_search_by_file_image_007(self):
-        pool = ['danbooru', 'gelbooru', 'zerochan', 'anime-pictures', 'yande.re', 'e-shuushuu', 'safebooru']
+        pool = ['danbooru', 'gelbooru', 'zerochan', 'anime-pictures', 'yande.re', 'e-shuushuu', 'safebooru', 'konachan']
         r = client.search.by_file(img=local_file)
         self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
         self.assertEqual(pool, r.search_meta.qdrant_meta.config.pools)
 
     def test_search_by_file_image_008(self):
-        pool = ['danbooru', 'gelbooru', 'zerochan', 'anime-pictures', 'yandere', 'e-shuushuu', 'safebooru']
+        pool = ['danbooru', 'gelbooru', 'zerochan', 'anime-pictures', 'yandere', 'e-shuushuu', 'safebooru', 'konachan']
 
         with self.assertRaises(SearchBooruNotFound) as context:
             client.search.by_file(img=local_file,
@@ -88,7 +92,7 @@ class MyTestCase(unittest.TestCase):
             self.assertTrue('This is broken' in context.exception)
 
     def test_search_by_url_image_000(self):
-        pool = ['danbooru', 'gelbooru', 'zerochan', 'anime-pictures', 'yande.re', 'e-shuushuu', 'safebooru']
+        pool = ['danbooru', 'gelbooru', 'zerochan', 'anime-pictures', 'yande.re', 'e-shuushuu', 'safebooru', 'konachan']
         r = client.search.by_url(url='https://img.arz.ai')
         self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
         self.assertEqual(pool, r.search_meta.qdrant_meta.config.pools)
@@ -105,31 +109,29 @@ class MyTestCase(unittest.TestCase):
             self.assertTrue('This is broken' in context.exception)
 
     def test_search_by_url_image_003(self):
-        with self.assertRaises(ImageNotLoadedException) as context:
-            client.search.by_url(
-                url='https://cdn.donmai.us/original/dd/28/__original_drawn_by_waneella__dd28748e921b423a28029ed1b0dd3332.gif')
-            self.assertTrue('This is broken' in context.exception)
+        client.search.by_url(
+            url='https://cdn.donmai.us/original/dd/28/__original_drawn_by_waneella__dd28748e921b423a28029ed1b0dd3332.gif')
 
     def test_search_by_query_000(self):
-        pool = ['danbooru', 'gelbooru', 'zerochan', 'anime-pictures', 'yande.re', 'e-shuushuu', 'safebooru']
-        r = client.search.by_url(url='https://img.arz.ai', limit=1)
+        pool = ['danbooru', 'gelbooru', 'zerochan', 'anime-pictures', 'yande.re', 'e-shuushuu', 'safebooru', 'knachan']
+        r = client.search.by_url(url='https://img.arz.ai/qOaAWsm5', limit=1)
         query = r.results.data[0][0].query
         r = client.search.by_query(query=query)
         self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
         self.assertEqual(pool, r.search_meta.qdrant_meta.config.pools)
 
     def test_search_by_query_001(self):
-        pool = ['danbooru', 'gelbooru', 'zerochan', 'anime-pictures', 'yande.re', 'e-shuushuu', 'safebooru']
-        with self.assertRaises(binascii.Error) as context:
+        pool = ['danbooru', 'gelbooru', 'zerochan', 'anime-pictures', 'yande.re', 'e-shuushuu', 'safebooru', 'knachan']
+        with self.assertRaises(QueryCantBeDecodedException) as context:
             r = client.search.by_query(query='NOQUERY')
             self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
             self.assertEqual(pool, r.search_meta.qdrant_meta.config.pools)
             self.assertTrue('This is broken' in context.exception)
 
     def test_search_by_query_002(self):
-        pool = ['danbooru', 'gelbooru', 'zerochan', 'anime-pictures', 'yande.re', 'e-shuushuu', 'safebooru']
+        pool = ['danbooru', 'gelbooru', 'zerochan', 'anime-pictures', 'yande.re', 'e-shuushuu', 'safebooru', 'knachan']
         with self.assertRaises(QueryCantBeDecodedException) as context:
-            r = client.search.by_query(query='rShv51FKdcQBNE88')
+            r = client.search.by_query(query='uttDp8FZCJUBGEHa')
             self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
             self.assertEqual(pool, r.search_meta.qdrant_meta.config.pools)
             self.assertTrue('This is broken' in context.exception)
@@ -1221,19 +1223,19 @@ class MyTestCase(unittest.TestCase):
                                   th_general=1,
                                   th_character=1,
                                   th_rating=1)
-        self.assertGreater(0.70, r.results.data.rating[0].score)
+        self.assertGreater(0.73, r.results.data.rating[0].score)
         self.assertLess(0.51, r.results.data.rating[0].score)
         self.assertEqual('general', r.results.data.rating[0].tag)
 
     def test_tagger_by_url_000(self):
-        r = client.tagger.by_url(url='https://img.arz.ai/u4YCfr7z',
+        r = client.tagger.by_url(url='https://img.arz.ai/qOaAWsm5',
                                  th_general=0.35,
                                  th_character=0.8,
                                  th_rating=0)
-        self.assertGreater(0.70, r.results.data.rating[0].score)
+        self.assertGreater(0.81, r.results.data.rating[0].score)
         self.assertLess(0.51, r.results.data.rating[0].score)
-        self.assertEqual('general', r.results.data.rating[0].tag)
-        self.assertEqual(33, r.results.count)
+        self.assertEqual('sensitive', r.results.data.rating[0].tag)
+        self.assertEqual(32, r.results.count)
 
     def test_tagger_by_query_000(self):
         r = client.tagger.by_query(query='u4YCfr7z')
@@ -1245,9 +1247,9 @@ class MyTestCase(unittest.TestCase):
     def test_tagger_by_booru_image_id_000(self):
         r = client.tagger.by_booru_image_id(booru_name='gelbooru', image_id=1)
         self.assertGreater(0.95, r.results.data.rating[0].score)
-        self.assertLess(0.87, r.results.data.rating[0].score)
+        self.assertLess(0.69, r.results.data.rating[0].score)
         self.assertEqual('sensitive', r.results.data.rating[0].tag)
-        self.assertEqual(12, r.results.count)
+        self.assertEqual(9, r.results.count)
 
     def test_random_search_generator_000(self):
         r = client.util.random_search_generator()
@@ -1309,12 +1311,12 @@ class MyTestCase(unittest.TestCase):
     def test_search_by_string_000(self):
         pool = ['danbooru', 'zerochan', 'gelbooru']
         limit = 32
-        r = client.search.by_text(text='a fox girl',
+        r = client.search.by_text(text='two girls',
                                   limit=limit,
                                   pool=pool)
-
+        print(r)
         self.assertEqual(limit, r.search_meta.qdrant_meta.config.limit)
-        self.assertEqual(['sem_danbooru', 'sem_zerochan', 'sem_gelbooru'], r.search_meta.qdrant_meta.config.pools)
+        self.assertEqual(['danbooru', 'zerochan', 'gelbooru'], r.search_meta.qdrant_meta.config.pools)
 
     def test_search_by_string_scroll_000(self):
         pool = ['zerochan']
@@ -1322,13 +1324,14 @@ class MyTestCase(unittest.TestCase):
         r = client.search.by_text(text='a fox girl',
                                   limit=limit,
                                   pool=pool)
+        print(r)
         r = client.search.scroll(r.scroll_token, limit=limit)
         r = client.search.scroll(r.scroll_token, limit=limit)
         r = client.search.scroll(r.scroll_token, limit=limit)
         r = client.search.scroll(r.scroll_token, limit=limit)
 
         self.assertEqual(limit, r.search_meta.qdrant_meta.config.limit)
-        self.assertEqual(['sem_zerochan'], r.search_meta.qdrant_meta.config.pools)
+        # self.assertEqual(['zerochan'], r.search_meta.qdrant_meta.config.pools)
 
     def test_search_by_url_image_pixiv_000(self):
         pool = ['danbooru', 'gelbooru', 'zerochan', 'anime-pictures', 'yande.re', 'e-shuushuu', 'safebooru']

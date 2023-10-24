@@ -1,4 +1,4 @@
-from findit_client.api.const import BOORUS_NAMES_STR
+from findit_client.api.const import BOORUS_NAMES_STR, BOORU_TO_ID
 from findit_client.exceptions import SearchBooruNotFound
 
 
@@ -8,7 +8,7 @@ def validate_params(func):
             total = kwargs['limit']
             if not isinstance(total, int):
                 total = int(total)
-            if not 0 < total <= 128:
+            if not 0 <= total <= 128:
                 total = 32
                 kwargs['limit'] = total
         if 'pool' in kwargs:
@@ -22,6 +22,12 @@ def validate_params(func):
         if 'booru_name' in kwargs:
             if kwargs['booru_name'] not in BOORUS_NAMES_STR:
                 raise SearchBooruNotFound(booru=kwargs['booru_name'])
+            kwargs['booru_name'] = BOORU_TO_ID[kwargs['booru_name']]
+
+        if 'pool_vector' in kwargs:
+            if kwargs['pool_vector'] not in BOORUS_NAMES_STR:
+                raise SearchBooruNotFound(booru=kwargs['pool_vector'])
+            kwargs['pool_vector'] = BOORU_TO_ID[kwargs['pool_vector']]
         num_sum = func(*args, **kwargs)
         return num_sum
 

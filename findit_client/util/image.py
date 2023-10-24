@@ -5,7 +5,7 @@ import numpy as np
 import cv2
 import threading
 import requests
-import hashlib
+from PIL import Image
 
 from findit_client.exceptions import (ImageNotLoadedException,
                                       ImageNotFetchedException,
@@ -16,22 +16,6 @@ from findit_client.models import ImageSearchResponseModel
 from findit_client.util.pixiv import check_login, login_in, get_image
 
 
-def resize(
-        img: np.ndarray,
-        width=256,
-        height=256,
-        padding=255
-) -> np.ndarray:
-    p = max(img.shape[:2] / np.array([height, width]))
-    r = img.shape[:2] / p
-    img = cv2.resize(img, (int(r[1]), int(r[0])), cv2.INTER_NEAREST)
-    re = np.zeros((height, width, 3)) + padding
-    offset = np.array((np.array(re.shape[:2]) - np.array(img.shape[:2])) / 2, dtype=np.int32)
-    re[offset[0]:offset[0] + img.shape[0], offset[1]:offset[1] + img.shape[1]] = img
-
-    return re
-
-
 def normalize(img, normalization_mode=True):
     if normalization_mode:
         img = img / 255
@@ -40,35 +24,92 @@ def normalize(img, normalization_mode=True):
     return img
 
 
-def load(
-        img: np.ndarray,
-        width: int = 448,
-        height: int = 448,
-        normalization_mode: bool | None = None,
-        color_schema_rgb: bool = False,
-        padding_color: int = 255,
-        mode: str = None,
-        origin: str = None
-) -> np.ndarray:
-    if img is None:
+# def load(
+#         img: np.ndarray,
+#         width: int = 448,
+#         height: int = 448,
+#         normalization_mode: bool | None = None,
+#         color_schema_rgb: bool = False,
+#         padding_color: int = 255,
+#         mode: str = None,
+#         origin: str = None
+# ) -> np.ndarray:
+#     if img is None:
+#         raise ImageNotLoadedException(mode=mode, origin=origin)
+#
+#     if color_schema_rgb:
+#         img = img[..., ::-1]
+#
+#     if normalization_mode is not None:
+#         img = normalize(img=img,
+#                         normalization_mode=normalization_mode)
+#
+#     if len(img.shape) == 2:
+#         img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+#     elif img.shape[2] == 4:
+#         trans_mask = img[:, :, 3] == 0
+#         img[trans_mask] = [255, 255, 255, 255]
+#         img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
+#
+#     img = resize(img, width=width, height=height, padding=padding_color)
+#     return img[None]
+
+
+def load(img: bytes,
+         width: int = 448,
+         height: int = 448,
+         normalization_mode: bool | None = None,
+         color_schema_rgb: bool = False,
+         padding_color: int = 255,
+         mode: str = None,
+         origin: str = None
+         ):
+    try:
+        image_bytes = io.BytesIO(img)
+        with Image.open(image_bytes) as image:
+            # Ensure the image has an alpha channel for transparency
+            image = image.convert('RGBA')
+
+            # Get the aspect ratio of the image
+            aspect = image.width / image.height
+            if aspect > 1:
+                new_width = width
+                new_height = int(height / aspect)
+            else:
+                new_width = int(width * aspect)
+                new_height = height
+
+            # Resize the image with the aspect ratio
+            resized_image = image.resize((new_width, new_height), Image.LANCZOS)
+            np_image = np.array(resized_image)
+            if np_image.shape[2] == 4:
+                alpha = np_image[:, :, 3:4] / 255.0
+                background = np.ones_like(np_image, dtype=np.uint8) * 255
+                background[:, :, :3] = [255, 255, 255]
+                blended = (np_image * alpha + background * (1 - alpha)).astype(np.uint8)
+                bgr_image = cv2.cvtColor(blended, cv2.COLOR_RGB2BGR)
+            else:
+                bgr_image = cv2.cvtColor(np_image, cv2.COLOR_RGB2BGR)
+
+            z = (height, width)
+            s = np.array(bgr_image.shape[:2])
+            p = max(s / z)
+            r = (s / p).astype(int)
+
+            re = np.zeros((*z, 3)) + padding_color
+
+            offset = (z - r) // 2
+            re[offset[0]:offset[0] + r[0], offset[1]:offset[1] + r[1]] = bgr_image
+
+            if normalization_mode is not None:
+                re = normalize(img=re,
+                               normalization_mode=normalization_mode)
+            if color_schema_rgb:
+                re = re[..., ::-1]
+            return re[None]
+    except Exception as e:
+        print(f"Skipping... e={e}")
         raise ImageNotLoadedException(mode=mode, origin=origin)
-
-    if color_schema_rgb:
-        img = img[..., ::-1]
-
-    if normalization_mode is not None:
-        img = normalize(img=img,
-                        normalization_mode=normalization_mode)
-
-    if len(img.shape) == 2:
-        img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-    elif img.shape[2] == 4:
-        trans_mask = img[:, :, 3] == 0
-        img[trans_mask] = [255, 255, 255, 255]
-        img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
-
-    img = resize(img, width=width, height=height, padding=padding_color)
-    return img[None]
 
 
 def build_masonry_collage(results: ImageSearchResponseModel) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -129,11 +170,12 @@ def load_file_image(image_file: str,
     :return: A tuple of (raw image (if selected), raw shape, resized image)
     """
     st = time.time()
-    i = load(img=cv2.imread(image_file),
-             mode='file',
-             origin=image_file,
-             **kwargs)
-    return i, time.time() - st
+    with open(image_file, "rb") as f:
+        i = load(img=f.read(),
+                 mode='file',
+                 origin=image_file,
+                 **kwargs)
+        return i, time.time() - st
 
 
 sess = requests.Session()
@@ -176,8 +218,7 @@ def load_url_image(url: str,
     if get_raw_content:
         return rq.content
 
-    arr = np.asarray(bytearray(rq.content), dtype=np.uint8)
-    i = load(img=cv2.imdecode(arr, -1),
+    i = load(img=rq.content,
              mode='file',
              origin=url,
              **kwargs)

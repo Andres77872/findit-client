@@ -29,11 +29,8 @@ sess.headers['User-Agent'] = 'findit.moe client -> https://findit.moe'
 
 def search_response(url: str,
                     js: dict = None,
-                    scroll_content: list = None,
-                    use_sem: bool = False,
                     **kwargs) -> ImageSearchResponseModel | None:
     j = js if js else kwargs
-    j['use_sem'] = use_sem
     if (resp := sess.post(url, json=j)) and resp.status_code == 200:
         results = resp.json()
         # print(results)
@@ -41,7 +38,6 @@ def search_response(url: str,
         return build_search_response(
             results=results,
             latency_search=tm,
-            scroll_content=scroll_content,
             **kwargs
         )
     return None
@@ -158,25 +154,16 @@ def search_scroll(
     if content == [0]:
         raise QueryCantBeDecodedException(query=scroll_token)
 
-    # print(content)
-
-    boorus_index = [content[i + 1] if content[i] == 1 else -1 for i in range(2, len(content), 2)]
-
-    # scroll_content = [content[i + 1] if content[i] == 1 else 0 for i in range(2, len(content), 2)]
-
-    # print(boorus_index)
-    # print(scroll_content)
-
     js = {
         'vector_id': content[0],
         'count': content[1],
         'limit': limit,
-        'boorus_index': boorus_index
+        'scroll': content[1]
     }
 
     # print(js)
 
-    if (sh := search_response(url + SEARCH_SCROLL_API_PATH, js, boorus_index, **kwargs)) and sh:
+    if (sh := search_response(url + SEARCH_SCROLL_API_PATH, js, **kwargs)) and sh:
         return sh
     raise RemoteRawSearchException(origin=url)
 
