@@ -24,37 +24,6 @@ def normalize(img, normalization_mode=True):
     return img
 
 
-# def load(
-#         img: np.ndarray,
-#         width: int = 448,
-#         height: int = 448,
-#         normalization_mode: bool | None = None,
-#         color_schema_rgb: bool = False,
-#         padding_color: int = 255,
-#         mode: str = None,
-#         origin: str = None
-# ) -> np.ndarray:
-#     if img is None:
-#         raise ImageNotLoadedException(mode=mode, origin=origin)
-#
-#     if color_schema_rgb:
-#         img = img[..., ::-1]
-#
-#     if normalization_mode is not None:
-#         img = normalize(img=img,
-#                         normalization_mode=normalization_mode)
-#
-#     if len(img.shape) == 2:
-#         img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-#     elif img.shape[2] == 4:
-#         trans_mask = img[:, :, 3] == 0
-#         img[trans_mask] = [255, 255, 255, 255]
-#         img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
-#
-#     img = resize(img, width=width, height=height, padding=padding_color)
-#     return img[None]
-
-
 def load(img: bytes,
          width: int = 448,
          height: int = 448,
@@ -237,10 +206,9 @@ def load_bytes_image(image_file: bytes,
     :return: A tuple of (raw image (if selected), raw shape, resized image)
     """
     st = time.time()
-    arr = np.asarray(bytearray(image_file), dtype=np.uint8)
-    i = load(img=cv2.imdecode(arr, -1),
+    i = load(img=image_file,
              mode='file',
-             origin=image_file,
+             origin='upload',
              **kwargs)
     return i, time.time() - st
 
