@@ -15,13 +15,13 @@ class ImageSearchResultSingleModel(BaseModel):
 
 class ImageSearchResultListModel(BaseModel):
     count: int
-    data: list[list[ImageSearchResultSingleModel, ...]]
+    data: list[list[ImageSearchResultSingleModel]]
 
 
 class ImageSearchResultQdrantConfigMeta(BaseModel):
     limit: int
-    pools: list[str, ...]
-    vector: list[float, ...]
+    pools: list[str]
+    vector: list[float]
 
 
 class ImageSearchResultQdrantMeta(BaseModel):
