@@ -73,7 +73,7 @@ def build_random_search_response(results: list[dict],
                                     params_data=[BOORU_TO_ID[_p['X-Booru-name']], int(_p['X-Image-Id'])])
         _r.append({
             'id': _p['X-Image-Id'],
-            'source': BOORU_SOURCE_URL[BOORU_TO_ID[_p['X-Booru-name']]].format(_p['X-Image-Id']),
+            'source': BOORU_SOURCE_URL[BOORU_TO_ID[_p['X-Booru-name']] - 1].format(_p['X-Image-Id']),
             'preview': _p['url']['224'],
             'img': _p['url']['512'],
             'score': 0,
