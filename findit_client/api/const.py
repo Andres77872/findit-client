@@ -29,7 +29,8 @@ BOORUS_NAMES_STR = [
     'yande.re',
     'e-shuushuu',
     'safebooru',
-    'konachan'
+    'konachan',
+    'tbib'
 ]
 
 BOORU_TO_ID = {
@@ -41,6 +42,7 @@ BOORU_TO_ID = {
     'e-shuushuu': 6,
     'safebooru': 7,
     'konachan': 8,
+    'tbib': 9,
 }
 
 ID_TO_BOORU = {
@@ -51,7 +53,8 @@ ID_TO_BOORU = {
     5: 'yande.re',
     6: 'e-shuushuu',
     7: 'safebooru',
-    8: 'konachan'
+    8: 'konachan',
+    9: 'tbib'
 }
 
 BOORU_SOURCE_URL = [
@@ -62,7 +65,8 @@ BOORU_SOURCE_URL = [
     'https://yande.re/post/show/{0}',
     'https://e-shuushuu.net/image/{0}',
     'https://safebooru.org/index.php?page=post&s=view&id={0}',
-    'https://konachan.com/post/show/{0}'
+    'https://konachan.com/post/show/{0}',
+    'https://tbib.org/index.php?page=post&s=view&id={0}',
 ]
 
 X_query_arzypher_params = {
