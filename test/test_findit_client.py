@@ -12,11 +12,11 @@ from findit_client.exceptions import (ImageNotFetchedException,
 client = FindItClient(
     # url_api_embedding='https://nn.arz.ai/',
     url_api_embedding='http://127.0.0.1:7999/',
-    # url_api_back_search='https://search.arz.ai/',
-    url_api_back_search='http://127.0.0.1:8000/',
+    url_api_back_search='https://search.arz.ai/',
+    # url_api_back_search='http://127.0.0.1:8000/',
     private_key='',
-    __ChatGPT_TOKEN__=os.environ['T']
-    # __ChatGPT_TOKEN__=''
+    # __ChatGPT_TOKEN__=os.environ['T']
+    __ChatGPT_TOKEN__=''
 )
 
 local_file = '/home/andres/Imágenes/0Q_ofZjV'
@@ -129,12 +129,19 @@ class MyTestCase(unittest.TestCase):
             self.assertTrue('This is broken' in context.exception)
 
     def test_search_by_query_002(self):
-        pool = ['danbooru', 'gelbooru', 'zerochan', 'anime-pictures', 'yande.re', 'e-shuushuu', 'safebooru', 'knachan']
+        pool = ['danbooru', 'gelbooru', 'zerochan', 'anime-pictures', 'yande.re', 'e-shuushuu', 'safebooru', 'konachan']
         with self.assertRaises(QueryCantBeDecodedException) as context:
             r = client.search.by_query(query='uttDp8FZCJUBGEHa')
             self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
             self.assertEqual(pool, r.search_meta.qdrant_meta.config.pools)
             self.assertTrue('This is broken' in context.exception)
+
+    def test_search_by_query_003(self):
+        pool = ['danbooru', 'gelbooru', 'zerochan', 'anime-pictures', 'yande.re', 'e-shuushuu', 'safebooru', 'konachan']
+        query = '7yjr5N7S-RcBIV1m'
+        r = client.search.by_query(query=query)
+        self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
+        self.assertEqual(pool, r.search_meta.qdrant_meta.config.pools)
 
     def test_search_scroll_000(self):
         r = client.search.by_url(url='https://img.arz.ai', limit=32)
@@ -1311,7 +1318,7 @@ class MyTestCase(unittest.TestCase):
     def test_search_by_string_000(self):
         pool = ['danbooru', 'zerochan', 'gelbooru']
         limit = 32
-        r = client.search.by_text(text='two girls',
+        r = client.search.by_text(text='a fox girl',
                                   limit=limit,
                                   pool=pool)
         print(r)
