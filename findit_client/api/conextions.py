@@ -19,7 +19,7 @@ from findit_client.api.const import (EMBEDDING_SEARCH_API_PATH,
                                      TAGGER_BY_VECTOR_API_PATH,
                                      BOORU_TO_ID,
                                      X_scroll_arzypher_params,
-                                     EMBEDDING_GET_VECTOR_TEXT_API_PATH)
+                                     EMBEDDING_GET_VECTOR_CLIP_TEXT_API_PATH)
 from findit_client.util.validations import validate_params
 
 sess = requests.Session()
@@ -59,11 +59,11 @@ def embedding_request(
     raise EmbeddingException(origin=url)
 
 
-def embedding_text_request(
+def embedding_clip_text_request(
         text: str,
         url_api_embedding: str
 ) -> tuple[list, float]:
-    url = url_api_embedding + EMBEDDING_GET_VECTOR_TEXT_API_PATH
+    url = url_api_embedding + EMBEDDING_GET_VECTOR_CLIP_TEXT_API_PATH
     if (resp := sess.post(url=url, data={'text': text})) and resp.status_code == 200:
         return resp.json(), resp.elapsed.microseconds / 1000000
     raise EmbeddingException(origin=url)

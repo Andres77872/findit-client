@@ -1,7 +1,8 @@
 EMBEDDING_SEARCH_API_PATH = 'pic2encoder'
 EMBEDDING_GET_VECTOR_API_PATH = 'get_vector'
 
-EMBEDDING_GET_VECTOR_TEXT_API_PATH = 'pic2encoder_clip_text'
+EMBEDDING_GET_VECTOR_CLIP_TEXT_API_PATH = 'pic2encoder_clip/text'
+EMBEDDING_GET_VECTOR_CLIP_IMAGE_API_PATH = 'pic2encoder_clip/image'
 
 SEARCH_BY_VECTOR_API_PATH = 'search_vector'
 SEARCH_BY_ID_API_PATH = 'search_id'
