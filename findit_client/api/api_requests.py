@@ -10,14 +10,15 @@ from findit_client.api.conextions import (search_by_vector,
                                           tagger_by_file_request,
                                           get_vector_by_id_request,
                                           tagger_by_vector_request,
-                                          random_search_request, search_by_string_request, embedding_text_request)
+                                          random_search_request, search_by_string_request, embedding_clip_text_request)
 
 
 class ApiRequests:
     def __init__(
             self,
             url_api_embedding: str,
-            url_api_back_search: str
+            url_api_back_search: str,
+            **kwargs
     ):
         self.url_api_embedding = url_api_embedding
         self.url_api_back_search = url_api_back_search
@@ -73,8 +74,8 @@ class ApiRequests:
             text: str,
             **kwargs
     ) -> ImageSearchResponseModel:
-        vector, tm = embedding_text_request(text=text,
-                                            url_api_embedding=self.url_api_embedding)
+        vector, tm = embedding_clip_text_request(text=text,
+                                                 url_api_embedding=self.url_api_embedding)
 
         return search_by_string_request(
             vector=vector,
