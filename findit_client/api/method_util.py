@@ -52,7 +52,7 @@ class FindItMethodsUtil:
             self,
             url: str,
     ) -> list[float]:
-        img_array, _ = load_url_image(url=url,
+        img_array, _ = load_url_image(image=url,
                                       pixiv_credentials=self.pixiv_credentials)
         return self.ApiRequests.get_embedding_vector(img_array)
 
@@ -97,7 +97,7 @@ class FindItMethodsUtil:
 
     def generate_md5_by_url(self,
                             url: str) -> str:
-        content = load_url_image(url=url,
+        content = load_url_image(image=url,
                                  get_raw_content=True,
                                  pixiv_credentials=self.pixiv_credentials)
         return hashlib.md5(bytearray(content)).hexdigest()
@@ -116,7 +116,7 @@ class FindItMethodsUtil:
             def retry(n, u):
                 for i in ['.png', '.jpg', '.jpeg']:
                     try:
-                        r = load_url_image(url=u.replace('.png', i),
+                        r = load_url_image(image=u.replace('.png', i),
                                            get_raw_content=True,
                                            pixiv_credentials=self.pixiv_credentials)
                     except ImageNotFetchedException:
