@@ -14,6 +14,7 @@ from findit_client.exceptions import (ImageNotLoadedException,
                                       ImageRemoteNoContentLengthFoundException, TooFewSearchResultsException)
 from findit_client.models import ImageSearchResponseModel
 from findit_client.util.pixiv import check_login, login_in, get_image
+from findit_client.util.validations import validate_load_image
 
 
 def normalize(img, normalization_mode=True):
@@ -127,10 +128,11 @@ def build_masonry_collage(results: ImageSearchResponseModel) -> tuple[np.ndarray
     return col, p5, p2
 
 
-def load_file_image(image_file: str,
+@validate_load_image
+def load_file_image(image: str | list[str],
                     **kwargs) -> tuple[np.ndarray, float]:
     """
-    :param image_file: Image as numpy array or image URL
+    :param image: Image as numpy array or image URL
     :param width: Image width destination (optional)
     :param height: Image height destination (optional)
     :param normalization_mode: Normalization mode True=[0-1], False=[-1,1], None=[0-255]
@@ -139,10 +141,10 @@ def load_file_image(image_file: str,
     :return: A tuple of (raw image (if selected), raw shape, resized image)
     """
     st = time.time()
-    with open(image_file, "rb") as f:
+    with open(image, "rb") as f:
         i = load(img=f.read(),
                  mode='file',
-                 origin=image_file,
+                 origin=image,
                  **kwargs)
         return i, time.time() - st
 
@@ -151,12 +153,13 @@ sess = requests.Session()
 sess.headers['User-Agent'] = 'findit.moe client -> https://findit.moe'
 
 
-def load_url_image(url: str,
+@validate_load_image
+def load_url_image(image: str | list[str],
                    pixiv_credentials: dict = None,
                    get_raw_content: bool = False,
                    **kwargs) -> tuple[np.ndarray, float] | str | bytes:
     """
-    :param url: Image as numpy array or image URL
+    :param image: Image as numpy array or image URL
     :param width: Image width destination (optional)
     :param height: Image height destination (optional)
     :param normalization_mode: Normalization mode True=[0-1], False=[-1,1], None=[0-255]
@@ -166,21 +169,21 @@ def load_url_image(url: str,
     """
     st = time.time()
 
-    if url.startswith('https://i.pximg.net'):
+    if image.startswith('https://i.pximg.net'):
         if not check_login():
             login_in(**pixiv_credentials)
-        rq = get_image(url=url)
+        rq = get_image(url=image)
     else:
-        rq = sess.get(url, timeout=2, stream=True)
+        rq = sess.get(image, timeout=2, stream=True)
     if rq.status_code != 200:
-        raise ImageNotFetchedException(origin=url)
+        raise ImageNotFetchedException(origin=image)
 
     if 'image' not in rq.headers['Content-Type']:
-        raise ImageRemoteNotAsImageContentTypeException(origin=url)
+        raise ImageRemoteNotAsImageContentTypeException(origin=image)
     if 'Content-Length' not in rq.headers:
-        raise ImageRemoteNoContentLengthFoundException(origin=url)
+        raise ImageRemoteNoContentLengthFoundException(origin=image)
     if int(rq.headers['Content-Length']) > 8000000:
-        raise ImageSizeTooBigException(origin=url,
+        raise ImageSizeTooBigException(origin=image,
                                        limit=8000000,
                                        size=int(rq.headers['Content-Length']))
 
@@ -189,15 +192,16 @@ def load_url_image(url: str,
 
     i = load(img=rq.content,
              mode='file',
-             origin=url,
+             origin=image,
              **kwargs)
     return i, time.time() - st
 
 
-def load_bytes_image(image_file: bytes,
+@validate_load_image
+def load_bytes_image(image: str | list[str],
                      **kwargs) -> tuple[np.ndarray, float]:
     """
-    :param image_file: Image as numpy array or image URL
+    :param image: Image as numpy array or image URL
     :param width: Image width destination (optional)
     :param height: Image height destination (optional)
     :param normalization_mode: Normalization mode True=[0-1], False=[-1,1], None=[0-255]
@@ -206,7 +210,7 @@ def load_bytes_image(image_file: bytes,
     :return: A tuple of (raw image (if selected), raw shape, resized image)
     """
     st = time.time()
-    i = load(img=image_file,
+    i = load(img=image,
              mode='file',
              origin='upload',
              **kwargs)
