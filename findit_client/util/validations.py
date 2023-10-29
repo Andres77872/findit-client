@@ -38,8 +38,8 @@ def validate_params(func):
 
 
 def validate_load_image(func):
-    def wrapper(image: str | list[str], *args, **kwargs):
-        if isinstance(image, str):
+    def wrapper(image: str | bytes | list[str | bytes], *args, **kwargs):
+        if isinstance(image, str | bytes):
             res = func(image, *args, **kwargs)
         else:
             res = [func(x, *args, **kwargs) for x in image]

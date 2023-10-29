@@ -198,7 +198,7 @@ def load_url_image(image: str | list[str],
 
 
 @validate_load_image
-def load_bytes_image(image: str | list[str],
+def load_bytes_image(image: bytes | list[bytes],
                      **kwargs) -> tuple[np.ndarray, float]:
     """
     :param image: Image as numpy array or image URL
