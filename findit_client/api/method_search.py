@@ -16,7 +16,7 @@ class FindItMethodsSearch:
 
     def by_file(
             self,
-            img: str,
+            img: str | list[str],
             pool: list[str] = None,
             limit: int = 32
     ) -> ImageSearchResponseModel:
