@@ -112,7 +112,7 @@ class ApiRequests:
     def tagger_by_booru_image_id(
             self,
             id_vector: int,
-            booru_name: str,
+            booru_name: str = None,
             **kwargs
     ) -> TaggerResponseModel:
         vector, tm1 = get_vector_by_id_request(

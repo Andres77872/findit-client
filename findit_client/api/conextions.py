@@ -15,11 +15,11 @@ from findit_client.api.const import (EMBEDDING_SEARCH_API_PATH,
                                      SEARCH_BY_ID_API_PATH,
                                      SEARCH_SCROLL_API_PATH,
                                      TAGGER_BY_FILE_API_PATH,
-                                     EMBEDDING_GET_VECTOR_API_PATH,
+                                     EMBEDDING_GET_VECTOR_BY_BOORU_API_PATH,
                                      TAGGER_BY_VECTOR_API_PATH,
                                      BOORU_TO_ID,
                                      X_scroll_arzypher_params,
-                                     EMBEDDING_GET_VECTOR_CLIP_TEXT_API_PATH)
+                                     EMBEDDING_GET_VECTOR_CLIP_TEXT_API_PATH, EMBEDDING_GET_VECTOR_BY_ID_FILE_API_PATH)
 from findit_client.util.validations import validate_params
 
 sess = requests.Session()
@@ -174,8 +174,14 @@ def get_vector_by_id_request(
         id_vector: int,
         booru_name: str
 ) -> tuple[np.ndarray, float]:
-    url = url + EMBEDDING_GET_VECTOR_API_PATH
-    if (resp := sess.post(url, json={'id_vector': id_vector, 'pool': booru_name})) and resp.status_code == 200:
-        results = resp.json()
-        return np.array(results)[None], resp.elapsed.microseconds / 1000000
+    if booru_name:
+        url = url + EMBEDDING_GET_VECTOR_BY_BOORU_API_PATH
+        if (resp := sess.post(url, json={'id_vector': id_vector, 'pool': booru_name})) and resp.status_code == 200:
+            results = resp.json()
+            return np.array(results)[None], resp.elapsed.microseconds / 1000000
+    else:
+        url = url + EMBEDDING_GET_VECTOR_BY_ID_FILE_API_PATH + '/' + str(id_vector)
+        if (resp := sess.post(url)) and resp.status_code == 200:
+            results = resp.json()
+            return np.array(results)[None], resp.elapsed.microseconds / 1000000
     raise RemoteRawSearchException(origin=url)
