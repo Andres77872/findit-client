@@ -11,6 +11,7 @@ class ImageSearchResultSingleModel(BaseModel):
     score: float
     pool: str
     query: str
+    size: list
 
 
 class ImageSearchResultListModel(BaseModel):

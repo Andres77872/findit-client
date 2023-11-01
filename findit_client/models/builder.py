@@ -13,8 +13,10 @@ from findit_client.models.model_tagger import TaggerResponseModel
 
 
 def build_search_response(results: dict,
-                          warning: list = [],
+                          warning=None,
                           **kwargs) -> ImageSearchResponseModel:
+    if warning is None:
+        warning = []
     st = time.time()
     rl = []
     for i in results['results']['data']:
@@ -33,7 +35,8 @@ def build_search_response(results: dict,
                 'img': f'{secrets.choice(URL_IMAGE_PROVIDER)}/{p512}',
                 'score': i[1],
                 'pool': ID_TO_BOORU[_p['id_booru']],
-                'query': query
+                'query': query,
+                'size': i[3]
             })
         rl.append(_r)
 
@@ -63,8 +66,10 @@ def build_search_response(results: dict,
 
 
 def build_random_search_response(results: list[dict],
-                                 warning: list = [],
+                                 warning=None,
                                  **kwargs) -> ImageSearchResponseModel:
+    if warning is None:
+        warning = []
     st = time.time()
     rl = []
     for _p in results:
@@ -78,7 +83,8 @@ def build_random_search_response(results: list[dict],
             'img': _p['url']['512'],
             'score': 0,
             'pool': _p['X-Booru-name'],
-            'query': query
+            'query': query,
+            'size': [_p['X-Width'], _p['X-Height']]
         })
         rl.append(_r)
 

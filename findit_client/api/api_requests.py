@@ -10,7 +10,9 @@ from findit_client.api.conextions import (search_by_vector,
                                           tagger_by_file_request,
                                           get_vector_by_id_request,
                                           tagger_by_vector_request,
-                                          random_search_request, search_by_string_request, embedding_clip_text_request)
+                                          random_search_request,
+                                          search_by_string_request,
+                                          embedding_clip_text_request)
 
 
 class ApiRequests:
