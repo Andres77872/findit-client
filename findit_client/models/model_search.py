@@ -12,6 +12,7 @@ class ImageSearchResultSingleModel(BaseModel):
     pool: str
     query: str
     size: list
+    color: str
 
 
 class ImageSearchResultListModel(BaseModel):

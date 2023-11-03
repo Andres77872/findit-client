@@ -36,7 +36,8 @@ def build_search_response(results: dict,
                 'score': i[1],
                 'pool': ID_TO_BOORU[_p['id_booru']],
                 'query': query,
-                'size': i[3]
+                'size': i[3],
+                'color': i[4]
             })
         rl.append(_r)
 
@@ -84,7 +85,8 @@ def build_random_search_response(results: list[dict],
             'score': 0,
             'pool': _p['X-Booru-name'],
             'query': query,
-            'size': [_p['X-Width'], _p['X-Height']]
+            'size': [_p['X-Width'], _p['X-Height']],
+            'color': _p['X-Color']
         })
         rl.append(_r)
 
