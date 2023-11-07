@@ -107,7 +107,7 @@ class FindItMethodsUtil:
                     if 'choices' in message:
                         if 'content' in message['choices'][0]['delta']:
                             t = message['choices'][0]['delta']['content']
-                            yield f"{t}\n\n"
+                            yield f"data: {t}\n\n"
             finally:
                 response_stream.close()
 
