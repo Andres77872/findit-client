@@ -106,7 +106,8 @@ class FindItMethodsUtil:
                 for message in response_stream:
                     if 'choices' in message:
                         if 'content' in message['choices'][0]['delta']:
-                            yield message['choices'][0]['delta']['content']
+                            t = message['choices'][0]['delta']['content']
+                            yield f"{t}\n\n"
             finally:
                 response_stream.close()
 
