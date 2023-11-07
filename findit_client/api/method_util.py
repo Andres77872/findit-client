@@ -71,7 +71,8 @@ class FindItMethodsUtil:
 
     def generate_nl_sentense_from_image_query(
             self,
-            results: TaggerResponseModel
+            results: TaggerResponseModel,
+            stream: bool = False
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         tags = ', '.join([x.tag + ' : ' + str(round(x.score, 4)) for x in results.results.data.general])
 
@@ -85,15 +86,28 @@ class FindItMethodsUtil:
         dont respond with the tags, only with a descriptions dont show the scores
         """
         messages = [{"role": "system", "content": "You are a helpful assistant."},
-                    {"role": "user",
-                     "content": msg}]
+                    {"role": "user", "content": msg}]
 
-        resp = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=messages,
-        )
+        if not stream:
+            # Non-streaming request
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=messages
+            )
+            return response['choices'][0]['message']['content']
+        else:
+            response_stream = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=messages,
+                stream=True
+            )
 
-        return resp['choices'][0]['message']['content']
+            try:
+                for message in response_stream:
+                    if 'choices' in message.data:
+                        yield message.data['choices'][0]['message']['content']
+            finally:
+                response_stream.close()
 
     def generate_md5_by_url(self,
                             url: str) -> str:
