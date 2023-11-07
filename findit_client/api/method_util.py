@@ -109,6 +109,7 @@ class FindItMethodsUtil:
                             t = message['choices'][0]['delta']['content']
                             yield f"data: {t}\n\n"
             finally:
+                yield "event: done\ndata: null\n\n"
                 response_stream.close()
 
     def generate_md5_by_url(self,
