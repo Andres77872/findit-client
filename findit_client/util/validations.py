@@ -1,7 +1,7 @@
 import numpy as np
 
 from findit_client.api.const import BOORUS_NAMES_STR, BOORU_TO_ID
-from findit_client.exceptions import SearchBooruNotFound
+from findit_client.exceptions import SearchBooruNotFound, SearchRatingNotFound
 
 
 def validate_params(func):
@@ -21,6 +21,13 @@ def validate_params(func):
             else:
                 kwargs['pool'] = BOORUS_NAMES_STR
 
+        if 'rating' in kwargs:
+            if (rating := kwargs['rating']) and rating is not None:
+                for r in rating:
+                    if r not in {'g', 's', 'q', 'e'}:
+                        raise SearchRatingNotFound(booru=r)
+            else:
+                kwargs['rating'] = ['g', 's', 'q', 'e']
         if 'booru_name' in kwargs:
             if kwargs['booru_name']:
                 if kwargs['booru_name'] not in BOORUS_NAMES_STR:
