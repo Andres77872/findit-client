@@ -147,6 +147,7 @@ def search_scroll(
         url: str,
         scroll_token: str,
         limit: str,
+        rating: list,
         **kwargs
 ) -> ImageSearchResponseModel:
     content, _ = arzypher_decoder(**X_scroll_arzypher_params,
@@ -158,7 +159,8 @@ def search_scroll(
         'vector_id': content[0],
         'count': content[1],
         'limit': limit,
-        'scroll': content[1]
+        'scroll': content[1],
+        'rating': rating
     }
 
     # print(js)
