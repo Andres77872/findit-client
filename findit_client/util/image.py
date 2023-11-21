@@ -103,6 +103,9 @@ def build_masonry_collage(results: ImageSearchResponseModel) -> tuple[np.ndarray
         arr = np.asarray(bytearray(rq.content), dtype=np.uint8)
         img = cv2.imdecode(arr, -1)
 
+        if img.shape[2] == 3:
+            img = cv2.cvtColor(img, cv2.COLOR_RGB2RGBA)
+
         input_image, h = resize_local(img)
 
         col.sort(key=lambda x: x[0])
