@@ -30,7 +30,12 @@ sess.headers['User-Agent'] = 'findit.moe client -> https://findit.moe'
 def search_response(url: str,
                     js: dict = None,
                     **kwargs) -> ImageSearchResponseModel | None:
-    j = js if js else kwargs
+    j = {}
+    if js:
+        j.update(js)
+    if kwargs:
+        j.update(kwargs)
+
     if (resp := sess.post(url, json=j)) and resp.status_code == 200:
         results = resp.json()
         # print(results)
