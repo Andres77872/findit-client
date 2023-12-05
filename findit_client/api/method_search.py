@@ -19,7 +19,8 @@ class FindItMethodsSearch:
             img: str | list[str],
             pool: list[str] = None,
             limit: int = 32,
-            rating: list[str] = None
+            rating: list[str] = None,
+            **kwargs
     ) -> ImageSearchResponseModel:
         img_array, tm = load_file_image(img)
         return self.ApiRequests.search_by_ndarray_image_input(
@@ -29,7 +30,8 @@ class FindItMethodsSearch:
             rating=rating,
             mode='FILE',
             load_image_time=tm,
-            api_version=self.__version__
+            api_version=self.__version__,
+            **kwargs
         )
 
     def by_url(
@@ -37,7 +39,8 @@ class FindItMethodsSearch:
             url: str,
             pool: list[str] = None,
             limit: int = 32,
-            rating: list[str] = None
+            rating: list[str] = None,
+            **kwargs
     ) -> ImageSearchResponseModel:
         img_array, tm = load_url_image(url)
         return self.ApiRequests.search_by_ndarray_image_input(
@@ -47,7 +50,8 @@ class FindItMethodsSearch:
             rating=rating,
             mode='URL',
             load_image_time=tm,
-            api_version=self.__version__
+            api_version=self.__version__,
+            **kwargs
         )
 
     def by_image_bytes(
@@ -55,7 +59,8 @@ class FindItMethodsSearch:
             img: bytes,
             pool: list[str] = None,
             limit: int = 32,
-            rating: list[str] = None
+            rating: list[str] = None,
+            **kwargs
     ) -> ImageSearchResponseModel:
         img_array, tm = load_bytes_image(img)
         return self.ApiRequests.search_by_ndarray_image_input(
@@ -65,7 +70,8 @@ class FindItMethodsSearch:
             rating=rating,
             mode='BIN_FILE',
             load_image_time=tm,
-            api_version=self.__version__
+            api_version=self.__version__,
+            **kwargs
         )
 
     def by_booru_image_id(
@@ -74,7 +80,8 @@ class FindItMethodsSearch:
             image_id: int,
             pool: list[str] = None,
             limit: int = 32,
-            rating: list[str] = None
+            rating: list[str] = None,
+            **kwargs
     ) -> ImageSearchResponseModel:
         return self.ApiRequests.search_by_booru_image_id(
             id_vector=image_id,
@@ -84,7 +91,8 @@ class FindItMethodsSearch:
             rating=rating,
             mode='QUERY',
             load_image_time=0,
-            api_version=self.__version__
+            api_version=self.__version__,
+            **kwargs
         )
 
     def by_query(
@@ -92,7 +100,8 @@ class FindItMethodsSearch:
             query: str,
             pool: list[str] = None,
             limit: int = 32,
-            rating: list[str] = None
+            rating: list[str] = None,
+            **kwargs
     ) -> ImageSearchResponseModel:
         dec, _ = arzypher_decoder(**X_query_arzypher_params,
                                   encoded=query)
@@ -108,7 +117,8 @@ class FindItMethodsSearch:
             rating=rating,
             mode='QUERY',
             load_image_time=0,
-            api_version=self.__version__
+            api_version=self.__version__,
+            **kwargs
         )
 
     def by_vector(
@@ -116,7 +126,8 @@ class FindItMethodsSearch:
             vector: list,
             pool: list[str] = None,
             limit: int = 32,
-            rating: list[str] = None
+            rating: list[str] = None,
+            **kwargs
     ) -> ImageSearchResponseModel:
         return self.ApiRequests.search_by_vector_input(
             vector=vector,
@@ -125,7 +136,8 @@ class FindItMethodsSearch:
             rating=rating,
             mode='VECTOR',
             load_image_time=0,
-            api_version=self.__version__
+            api_version=self.__version__,
+            **kwargs
         )
 
     def by_text(
@@ -133,7 +145,8 @@ class FindItMethodsSearch:
             text: str,
             pool: list[str] = None,
             limit: int = 32,
-            rating: list[str] = None
+            rating: list[str] = None,
+            **kwargs
     ) -> ImageSearchResponseModel:
         return self.ApiRequests.search_by_string(
             use_sem=True,
@@ -143,14 +156,16 @@ class FindItMethodsSearch:
             rating=rating,
             mode='TEXT',
             load_image_time=0,
-            api_version=self.__version__
+            api_version=self.__version__,
+            **kwargs
         )
 
     def scroll(
             self,
             scroll_token: str,
             limit: int = 32,
-            rating: list[str] = None
+            rating: list[str] = None,
+            **kwargs
     ) -> ImageSearchResponseModel:
         return self.ApiRequests.search_scroll(
             limit=limit,
@@ -158,5 +173,6 @@ class FindItMethodsSearch:
             scroll_token=scroll_token,
             mode='SCROLL',
             load_image_time=0,
-            api_version=self.__version__
+            api_version=self.__version__,
+            **kwargs
         )
