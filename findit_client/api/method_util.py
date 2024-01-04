@@ -1,4 +1,5 @@
 import hashlib
+from typing import Generator
 
 import numpy as np
 
@@ -24,7 +25,7 @@ class FindItMethodsUtil:
         self.ApiRequests = ApiRequests(**kwargs)
         self.__version__ = __version__
         self.pixiv_credentials = pixiv_credentials
-        openai.api_key = __ChatGPT_TOKEN__
+        self.client = openai.OpenAI(api_key=__ChatGPT_TOKEN__)
 
     def random_search_generator(
             self,
@@ -72,8 +73,9 @@ class FindItMethodsUtil:
     def generate_nl_sentense_from_image_query(
             self,
             results: TaggerResponseModel,
-            stream: bool = False
-    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+            stream: bool = False,
+            model: str = 'gpt-3.5-turbo'
+    ):
         tags = ', '.join([x.tag + ' : ' + str(round(x.score, 4)) for x in results.results.data.general])
 
         msg = f"""
@@ -90,27 +92,24 @@ class FindItMethodsUtil:
 
         if not stream:
             # Non-streaming request
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
+            response = self.client.chat.completions.create(
+                model=model,
                 messages=messages
             )
-            return response['choices'][0]['message']['content']
+            return response.choices[0].message.content
         else:
-            response_stream = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
+            response_stream = self.client.chat.completions.create(
+                model=model,
                 messages=messages,
                 stream=True
             )
 
-            try:
-                for message in response_stream:
-                    if 'choices' in message:
-                        if 'content' in message['choices'][0]['delta']:
-                            t = message['choices'][0]['delta']['content']
-                            yield f"data: {t}\n\n"
-            finally:
-                yield "event: done\ndata: null\n\n"
-                response_stream.close()
+            for message in response_stream:
+                t = message.choices[0].delta.content
+                yield f"data: {t}\n\n"
+
+            yield "event: done\ndata: null\n\n"
+            response_stream.close()
 
     def generate_md5_by_url(self,
                             url: str) -> str:
