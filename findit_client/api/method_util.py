@@ -105,8 +105,8 @@ class FindItMethodsUtil:
             )
 
             for message in response_stream:
-                t = message.choices[0].delta.content
-                yield f"data: {t}\n\n"
+                if t := message.choices[0].delta.content:
+                    yield f"data: {t}\n\n"
 
             yield "event: done\ndata: null\n\n"
             response_stream.close()
