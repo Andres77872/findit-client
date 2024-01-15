@@ -94,11 +94,10 @@ class FindItMethodsTagger:
             th_character: float = 0.8,
             th_general: float = 0.5
     ) -> TaggerResponseModel:
-        (booru_id, image_id, _), _ = arzypher_decoder(**X_image_arzypher_params,
-                                                      encoded=query)
+        (image_id, _), _ = arzypher_decoder(**X_image_arzypher_params,
+                                            encoded=query)
         return self.ApiRequests.tagger_by_booru_image_id(
             id_vector=image_id,
-            booru_name=ID_TO_BOORU[booru_id],
             th_rating=th_rating,
             th_character=th_character,
             th_general=th_general,

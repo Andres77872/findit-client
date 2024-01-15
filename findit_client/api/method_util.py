@@ -1,4 +1,5 @@
 import hashlib
+from typing import Generator
 
 import numpy as np
 
@@ -24,7 +25,7 @@ class FindItMethodsUtil:
         self.ApiRequests = ApiRequests(**kwargs)
         self.__version__ = __version__
         self.pixiv_credentials = pixiv_credentials
-        openai.api_key = __ChatGPT_TOKEN__
+        self.client = openai.OpenAI(api_key=__ChatGPT_TOKEN__)
 
     def random_search_generator(
             self,
@@ -52,7 +53,7 @@ class FindItMethodsUtil:
             self,
             url: str,
     ) -> list[float]:
-        img_array, _ = load_url_image(url=url,
+        img_array, _ = load_url_image(image=url,
                                       pixiv_credentials=self.pixiv_credentials)
         return self.ApiRequests.get_embedding_vector(img_array)
 
@@ -71,8 +72,10 @@ class FindItMethodsUtil:
 
     def generate_nl_sentense_from_image_query(
             self,
-            results: TaggerResponseModel
-    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+            results: TaggerResponseModel,
+            stream: bool = False,
+            model: str = 'gpt-3.5-turbo'
+    ):
         tags = ', '.join([x.tag + ' : ' + str(round(x.score, 4)) for x in results.results.data.general])
 
         msg = f"""
@@ -85,19 +88,32 @@ class FindItMethodsUtil:
         dont respond with the tags, only with a descriptions dont show the scores
         """
         messages = [{"role": "system", "content": "You are a helpful assistant."},
-                    {"role": "user",
-                     "content": msg}]
+                    {"role": "user", "content": msg}]
 
-        resp = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=messages,
-        )
+        if not stream:
+            # Non-streaming request
+            response = self.client.chat.completions.create(
+                model=model,
+                messages=messages
+            )
+            return response.choices[0].message.content
+        else:
+            response_stream = self.client.chat.completions.create(
+                model=model,
+                messages=messages,
+                stream=True
+            )
 
-        return resp['choices'][0]['message']['content']
+            for message in response_stream:
+                if t := message.choices[0].delta.content:
+                    yield f"data: {t}\n\n"
+
+            yield "event: done\ndata: null\n\n"
+            response_stream.close()
 
     def generate_md5_by_url(self,
                             url: str) -> str:
-        content = load_url_image(url=url,
+        content = load_url_image(image=url,
                                  get_raw_content=True,
                                  pixiv_credentials=self.pixiv_credentials)
         return hashlib.md5(bytearray(content)).hexdigest()
@@ -116,7 +132,7 @@ class FindItMethodsUtil:
             def retry(n, u):
                 for i in ['.png', '.jpg', '.jpeg']:
                     try:
-                        r = load_url_image(url=u.replace('.png', i),
+                        r = load_url_image(image=u.replace('.png', i),
                                            get_raw_content=True,
                                            pixiv_credentials=self.pixiv_credentials)
                     except ImageNotFetchedException:

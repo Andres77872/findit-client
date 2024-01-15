@@ -45,7 +45,13 @@ class ImageRemoteNoContentLengthFoundException(Exception):
 
 class SearchBooruNotFound(Exception):
     def __init__(self, booru, message="Error, booru not found"):
-        self.message = message + ', booru: ' + booru + ', avaible boorus: ' + ', '.join(BOORUS_NAMES_STR)
+        self.message = message + ', booru: ' + booru + ', available boorus: ' + ', '.join(BOORUS_NAMES_STR)
+        super().__init__(self.message)
+
+
+class SearchRatingNotFound(Exception):
+    def __init__(self, booru, message="Error, rating not found"):
+        self.message = message + ', rating: ' + booru + ', available rating: ' + 'g, s, q, e'
         super().__init__(self.message)
 
 
