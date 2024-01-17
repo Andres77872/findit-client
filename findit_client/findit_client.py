@@ -8,13 +8,15 @@ class FindItClient(FindItBase):
     def __init__(self, url_api_embedding: str = 'http://127.0.0.1:7999/',
                  url_api_back_search: str = 'https://search.arz.ai/',
                  private_key: str | None = None,
-                 __ChatGPT_TOKEN__: str = None,
+                 openai_api_key: str = None,
+                 openai_organization: str = None,
                  pixiv_credentials: dict = {'username': '', 'pasword': ''}):
         super().__init__(url_api_embedding=url_api_embedding,
                          url_api_back_search=url_api_back_search,
                          private_key=private_key,
                          __version__=__version__,
-                         __ChatGPT_TOKEN__=__ChatGPT_TOKEN__,
+                         openai_api_key=openai_api_key,
+                         openai_organization=openai_organization,
                          pixiv_credentials=pixiv_credentials)
 
     def download_embedding_search_model(self):

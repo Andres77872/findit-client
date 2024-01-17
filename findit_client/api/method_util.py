@@ -19,13 +19,14 @@ from findit_client.util.zip_file import zip_file
 class FindItMethodsUtil:
     def __init__(self,
                  __version__: str,
-                 __ChatGPT_TOKEN__: str,
+                 openai_api_key: str,
+                 openai_organization: str,
                  pixiv_credentials: dict,
                  **kwargs):
         self.ApiRequests = ApiRequests(**kwargs)
         self.__version__ = __version__
         self.pixiv_credentials = pixiv_credentials
-        self.client = openai.OpenAI(api_key=__ChatGPT_TOKEN__)
+        self.client = openai.OpenAI(api_key=openai_api_key, organization=openai_organization)
 
     def random_search_generator(
             self,
@@ -76,7 +77,7 @@ class FindItMethodsUtil:
             stream: bool = False,
             model: str = 'gpt-3.5-turbo'
     ):
-        tags = ', '.join([x.tag + ' : ' + str(round(x.score, 4)) for x in results.results.data.general])
+        tags = ', '.join([x.tag + ' : ' + str(round(x.score, 2)) for x in results.results.data.general])
 
         msg = f"""
         Using the next list of tags and score with the format tag:score, where tag is the name and score is the importance
