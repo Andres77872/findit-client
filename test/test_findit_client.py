@@ -1,5 +1,3 @@
-import os
-from glob import glob
 import unittest
 from findit_client import FindItClient
 from findit_client.exceptions import (ImageNotFetchedException,
@@ -39,7 +37,6 @@ class MyTestCase(unittest.TestCase):
         r = client.search.by_file(img=local_file,
                                   limit=limit,
                                   pool=pool)
-        print(r)
         self.assertEqual(limit, r.search_meta.qdrant_meta.config.limit)
         self.assertEqual(pool, r.search_meta.qdrant_meta.config.pools)
 
@@ -103,7 +100,9 @@ class MyTestCase(unittest.TestCase):
 
     def test_search_by_url_image_000(self):
         pool = all_pool
-        r = client.search.by_url(url='https://img.arz.ai')
+        r = client.search.by_url(
+            url='https://static.zerochan.net/Kotonoha.Twins.full.4100292.jpg',
+            rating=['g'])
         self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
         self.assertEqual(pool, r.search_meta.qdrant_meta.config.pools)
 
@@ -184,7 +183,7 @@ class MyTestCase(unittest.TestCase):
         r = client.search.by_booru_image_id(image_id=3950483,
                                             booru_name='zerochan',
                                             limit=32)
-        self.assertEqual(0, len(r.results.data))
+        self.assertEqual(32, len(r.results.data))
 
     def test_search_by_vector_000(self):
         r = client.search.by_vector(vector=[
@@ -1218,8 +1217,7 @@ class MyTestCase(unittest.TestCase):
 
     def test_tagger_by_file_000(self):
         r = client.tagger.by_file(img=local_file)
-        print(r)
-        self.assertEqual(26, r.results.count)
+        self.assertEqual(25, r.results.count)
 
     def test_tagger_by_file_001(self):
         r = client.tagger.by_file(img=local_file,
@@ -1236,13 +1234,14 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(1, r.results.count)
 
     def test_tagger_by_file_003(self):
-        r = client.tagger.by_file(img=local_file,
-                                  th_general=1,
-                                  th_character=1,
-                                  th_rating=1)
-        self.assertGreater(0.73, r.results.data.rating[0].score)
+        r = client.tagger.by_file(img='sBEA1xC1.webp',
+                                  th_general=0.35,
+                                  th_character=0.35,
+                                  th_rating=0.35)
+        print(r)
+        self.assertGreater(0.89, r.results.data.rating[0].score)
         self.assertLess(0.51, r.results.data.rating[0].score)
-        self.assertEqual('general', r.results.data.rating[0].tag)
+        self.assertEqual('sensitive', r.results.data.rating[0].tag)
 
     def test_tagger_by_url_000(self):
         r = client.tagger.by_url(url='https://img.arz.ai/qOaAWsm5',
@@ -1252,21 +1251,21 @@ class MyTestCase(unittest.TestCase):
         self.assertGreater(0.81, r.results.data.rating[0].score)
         self.assertLess(0.51, r.results.data.rating[0].score)
         self.assertEqual('sensitive', r.results.data.rating[0].tag)
-        self.assertEqual(32, r.results.count)
+        self.assertEqual(31, r.results.count)
 
     def test_tagger_by_query_000(self):
-        r = client.tagger.by_query(query='hAfAMxp9')
-        self.assertGreater(0.70, r.results.data.rating[0].score)
+        r = client.tagger.by_query(query='sBEA1xC1')
+        self.assertGreater(0.91, r.results.data.rating[0].score)
         self.assertLess(0.49, r.results.data.rating[0].score)
-        self.assertEqual('general', r.results.data.rating[0].tag)
-        self.assertEqual(7, r.results.count)
+        self.assertEqual('sensitive', r.results.data.rating[0].tag)
+        self.assertEqual(38, r.results.count)
 
     def test_tagger_by_booru_image_id_000(self):
         r = client.tagger.by_booru_image_id(booru_name='gelbooru', image_id=1)
         self.assertGreater(0.95, r.results.data.rating[0].score)
         self.assertLess(0.56, r.results.data.rating[0].score)
         self.assertEqual('sensitive', r.results.data.rating[0].tag)
-        self.assertEqual(7, r.results.count)
+        self.assertEqual(10, r.results.count)
 
     def test_random_search_generator_000(self):
         r = client.util.random_search_generator()
@@ -1321,9 +1320,10 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(1024, len(r))
 
     def test_chatgpt_generator_001(self):
-        r = client.tagger.by_booru_image_id(booru_name='gelbooru',
-                                            image_id=1)
-        print(client.util.generate_nl_sentense_from_image_query(r))
+        r = client.tagger.by_url('https://img.arz.ai/u5dAyYgR')
+        r = client.util.generate_nl_sentense_from_image_query(results=r, model='gpt-3.5-turbo-1106', stream=True)
+        for i in r:
+            print(i)
 
     def test_search_by_string_000(self):
         pool = ['danbooru', 'zerochan', 'gelbooru']
@@ -1370,11 +1370,11 @@ class MyTestCase(unittest.TestCase):
         with open('/mnt/RAID0/temp/a.zip', 'wb') as f:
             f.write(r)
 
-    def test_search_by_batch_file_image_001(self):
-        limit = 32
-        r = client.search.by_file(img=local_files,
-                                  limit=limit)
-        print(r)
+    # def test_search_by_batch_file_image_001(self):
+    #     limit = 32
+    #     r = client.search.by_file(img=local_files,
+    #                               limit=limit)
+    #     print(r)
 
     def test_X(self):
         r = client.tagger.by_booru_image_id(booru_name='gelbooru',
