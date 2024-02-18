@@ -183,12 +183,13 @@ def load_url_image(image: str | list[str],
 
     if 'image' not in rq.headers['Content-Type']:
         raise ImageRemoteNotAsImageContentTypeException(origin=image)
-    if 'Content-Length' not in rq.headers:
-        raise ImageRemoteNoContentLengthFoundException(origin=image)
-    if int(rq.headers['Content-Length']) > 8000000:
-        raise ImageSizeTooBigException(origin=image,
-                                       limit=8000000,
-                                       size=int(rq.headers['Content-Length']))
+    if not image.startswith('https://shr.arz.ai/q/'):
+        if 'Content-Length' not in rq.headers:
+            raise ImageRemoteNoContentLengthFoundException(origin=image)
+        if int(rq.headers['Content-Length']) > 8000000:
+            raise ImageSizeTooBigException(origin=image,
+                                           limit=8000000,
+                                           size=int(rq.headers['Content-Length']))
 
     if get_raw_content:
         return rq.content
