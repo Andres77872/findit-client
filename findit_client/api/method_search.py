@@ -20,6 +20,7 @@ class FindItMethodsSearch:
             pool: list[str] = None,
             limit: int = 32,
             rating: list[str] = None,
+            text: str = None,
             **kwargs
     ) -> ImageSearchResponseModel:
         img_array, tm = load_file_image(img)
@@ -31,6 +32,7 @@ class FindItMethodsSearch:
             mode='FILE',
             load_image_time=tm,
             api_version=self.__version__,
+            text=text,
             **kwargs
         )
 
@@ -40,6 +42,7 @@ class FindItMethodsSearch:
             pool: list[str] = None,
             limit: int = 32,
             rating: list[str] = None,
+            text: str = None,
             **kwargs
     ) -> ImageSearchResponseModel:
         img_array, tm = load_url_image(url)
@@ -60,6 +63,7 @@ class FindItMethodsSearch:
             pool: list[str] = None,
             limit: int = 32,
             rating: list[str] = None,
+            text: str = None,
             **kwargs
     ) -> ImageSearchResponseModel:
         img_array, tm = load_bytes_image(img)
@@ -81,6 +85,7 @@ class FindItMethodsSearch:
             pool: list[str] = None,
             limit: int = 32,
             rating: list[str] = None,
+            text: str = None,
             **kwargs
     ) -> ImageSearchResponseModel:
         return self.ApiRequests.search_by_booru_image_id(
@@ -101,6 +106,7 @@ class FindItMethodsSearch:
             pool: list[str] = None,
             limit: int = 32,
             rating: list[str] = None,
+            text: str = None,
             **kwargs
     ) -> ImageSearchResponseModel:
         dec, _ = arzypher_decoder(**X_query_arzypher_params,
@@ -127,6 +133,7 @@ class FindItMethodsSearch:
             pool: list[str] = None,
             limit: int = 32,
             rating: list[str] = None,
+            text: str = None,
             **kwargs
     ) -> ImageSearchResponseModel:
         return self.ApiRequests.search_by_vector_input(

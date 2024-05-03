@@ -28,6 +28,7 @@ class ApiRequests:
     def search_by_ndarray_image_input(
             self,
             img_array: np.ndarray,
+            text: str = None,
             **kwargs
     ) -> ImageSearchResponseModel:
         vector, tm = embedding_request(
