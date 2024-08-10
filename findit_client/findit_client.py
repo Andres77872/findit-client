@@ -10,14 +10,16 @@ class FindItClient(FindItBase):
                  private_key: str | None = None,
                  openai_api_key: str = None,
                  openai_organization: str = None,
-                 pixiv_credentials: dict = {'username': '', 'pasword': ''}):
+                 pixiv_credentials: dict = {'username': '', 'pasword': ''},
+                 openai_base_url: str = None):
         super().__init__(url_api_embedding=url_api_embedding,
                          url_api_back_search=url_api_back_search,
                          private_key=private_key,
                          __version__=__version__,
                          openai_api_key=openai_api_key,
                          openai_organization=openai_organization,
-                         pixiv_credentials=pixiv_credentials)
+                         pixiv_credentials=pixiv_credentials,
+                         openai_base_url=openai_base_url)
 
     def download_embedding_search_model(self):
         pass
