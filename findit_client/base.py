@@ -9,6 +9,7 @@ class FindItBase:
                  private_key: str,
                  openai_api_key: str,
                  openai_organization: str,
+                 openai_base_url: str,
                  **kwargs):
         self.__version__ = __version__
         self.search = FindItMethodsSearch(__version__=__version__, **kwargs)
@@ -16,4 +17,5 @@ class FindItBase:
         self.util = FindItMethodsUtil(__version__=__version__,
                                       openai_api_key=openai_api_key,
                                       openai_organization=openai_organization,
+                                      openai_base_url=openai_base_url,
                                       **kwargs)

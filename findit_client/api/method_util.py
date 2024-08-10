@@ -1,4 +1,5 @@
 import hashlib
+from typing import Generator
 
 import numpy as np
 
@@ -20,12 +21,15 @@ class FindItMethodsUtil:
                  __version__: str,
                  openai_api_key: str,
                  openai_organization: str,
+                 openai_base_url: str,
                  pixiv_credentials: dict,
                  **kwargs):
         self.ApiRequests = ApiRequests(**kwargs)
         self.__version__ = __version__
         self.pixiv_credentials = pixiv_credentials
-        self.client = openai.OpenAI(api_key=openai_api_key, organization=openai_organization)
+        self.client = openai.OpenAI(api_key=openai_api_key,
+                                    organization=openai_organization,
+                                    base_url=openai_base_url)
 
     def random_search_generator(
             self,
@@ -80,11 +84,11 @@ class FindItMethodsUtil:
 
         msg = f"""
         Using the next list of tags and score with the format tag:score, where tag is the name and score is the importance
-        
+
         [{tags}]
-        
+
         write a Natural Language sentence using all tags considering the importance of the tag after the :
-        
+
         dont respond with the tags, only with a descriptions dont show the scores
         """
         messages = [{"role": "system", "content": "You are a helpful assistant."},
