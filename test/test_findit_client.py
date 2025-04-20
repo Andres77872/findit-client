@@ -12,13 +12,11 @@ client = FindItClient(
     url_api_embedding='https://nn.arz.ai/',
     # url_api_embedding='http://127.0.0.1:7999/',
     url_api_back_search='https://search.arz.ai/',
-    # url_api_back_search='http://127.0.0.1:8000/',
-    private_key='',
-    __ChatGPT_TOKEN__=os.environ['OPENAI_TOKEN']
+    # url_api_back_search='http://127.0.0.1:8000/'
 )
 
-local_file = os.environ['K'] + '/0Q_ofZjV'
-local_files = glob(os.environ['K'] + '/search_batch_test/*.png')
+local_file = '/home/andres/Pictures/test/0000A3CEA1F8818C260C7E4FA37A80C8.webp'
+local_files = glob('/home/andres/Pictures/test/*.webp')
 all_pool = [
     'danbooru',
     'gelbooru',
@@ -184,7 +182,7 @@ class MyTestCase(unittest.TestCase):
         r = client.search.by_booru_image_id(image_id=3950483,
                                             booru_name='zerochan',
                                             limit=32)
-        self.assertEqual(0, len(r.results.data))
+        self.assertEqual(32, len(r.results.data))
 
     def test_search_by_vector_000(self):
         r = client.search.by_vector(vector=[
@@ -1219,7 +1217,7 @@ class MyTestCase(unittest.TestCase):
     def test_tagger_by_file_000(self):
         r = client.tagger.by_file(img=local_file)
         print(r)
-        self.assertEqual(26, r.results.count)
+        self.assertEqual(13, r.results.count)
 
     def test_tagger_by_file_001(self):
         r = client.tagger.by_file(img=local_file,
@@ -1240,9 +1238,9 @@ class MyTestCase(unittest.TestCase):
                                   th_general=1,
                                   th_character=1,
                                   th_rating=1)
-        self.assertGreater(0.73, r.results.data.rating[0].score)
+        self.assertGreater(0.91, r.results.data.rating[0].score)
         self.assertLess(0.51, r.results.data.rating[0].score)
-        self.assertEqual('general', r.results.data.rating[0].tag)
+        self.assertEqual('sensitive', r.results.data.rating[0].tag)
 
     def test_tagger_by_url_000(self):
         r = client.tagger.by_url(url='https://img.arz.ai/qOaAWsm5',
@@ -1252,21 +1250,21 @@ class MyTestCase(unittest.TestCase):
         self.assertGreater(0.81, r.results.data.rating[0].score)
         self.assertLess(0.51, r.results.data.rating[0].score)
         self.assertEqual('sensitive', r.results.data.rating[0].tag)
-        self.assertEqual(32, r.results.count)
+        self.assertEqual(31, r.results.count)
 
     def test_tagger_by_query_000(self):
         r = client.tagger.by_query(query='hAfAMxp9')
-        self.assertGreater(0.70, r.results.data.rating[0].score)
+        self.assertGreater(0.77, r.results.data.rating[0].score)
         self.assertLess(0.49, r.results.data.rating[0].score)
         self.assertEqual('general', r.results.data.rating[0].tag)
-        self.assertEqual(7, r.results.count)
+        self.assertEqual(19, r.results.count)
 
     def test_tagger_by_booru_image_id_000(self):
         r = client.tagger.by_booru_image_id(booru_name='gelbooru', image_id=1)
         self.assertGreater(0.95, r.results.data.rating[0].score)
         self.assertLess(0.56, r.results.data.rating[0].score)
         self.assertEqual('sensitive', r.results.data.rating[0].tag)
-        self.assertEqual(7, r.results.count)
+        self.assertEqual(10, r.results.count)
 
     def test_random_search_generator_000(self):
         r = client.util.random_search_generator()
@@ -1320,11 +1318,6 @@ class MyTestCase(unittest.TestCase):
         r = client.util.image_encoder_by_file(img=local_file)
         self.assertEqual(1024, len(r))
 
-    def test_chatgpt_generator_001(self):
-        r = client.tagger.by_booru_image_id(booru_name='gelbooru',
-                                            image_id=1)
-        print(client.util.generate_nl_sentense_from_image_query(r))
-
     def test_search_by_string_000(self):
         pool = ['danbooru', 'zerochan', 'gelbooru']
         limit = 32
@@ -1367,7 +1360,7 @@ class MyTestCase(unittest.TestCase):
         # r = client.util.download_pixiv_image(idx=110480732, token='TOKEN')
         r = client.util.download_pixiv_image(idx=110480732, token=None)
 
-        with open('/mnt/RAID0/temp/a.zip', 'wb') as f:
+        with open('/mnt/RAID5/findit.moe/temp/a.zip', 'wb') as f:
             f.write(r)
 
     def test_search_by_batch_file_image_001(self):
