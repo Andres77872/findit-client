@@ -1,6 +1,6 @@
 from findit_client.base import FindItBase
 
-__version__ = '0.2.2'
+__version__ = '0.2.3'
 
 
 class FindItClient(FindItBase):
