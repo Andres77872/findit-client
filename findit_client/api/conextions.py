@@ -103,7 +103,7 @@ def random_search_request(
 ) -> ImageSearchResponseModel:
     g = f'?total={limit}&'
     if pool is not None:
-        g += 'booru=' + ','.join([str(BOORU_TO_ID[x]) for x in pool]) + '&'
+        g += 'booru=' + ','.join(pool) + '&'
     if content is not None:
         g += 'content=' + content + '&'
 
