@@ -1,17 +1,12 @@
 import hashlib
-from typing import Generator
 
 import numpy as np
 
+from findit_client.api.api_requests import ApiRequests
 from findit_client.exceptions import ImageNotFetchedException
 from findit_client.models import ImageSearchResponseModel
-from findit_client.api.api_requests import ApiRequests
-from findit_client.models.model_tagger import TaggerResponseModel
 from findit_client.util import load_file_image, load_url_image, load_bytes_image
-
 from findit_client.util.image import build_masonry_collage
-import openai
-
 from findit_client.util.pixiv import get_pixiv_image_url, get_crawler_image
 from findit_client.util.zip_file import zip_file
 
@@ -19,13 +14,12 @@ from findit_client.util.zip_file import zip_file
 class FindItMethodsUtil:
     def __init__(self,
                  __version__: str,
-                 __ChatGPT_TOKEN__: str,
                  pixiv_credentials: dict,
                  **kwargs):
         self.ApiRequests = ApiRequests(**kwargs)
         self.__version__ = __version__
         self.pixiv_credentials = pixiv_credentials
-        self.client = openai.OpenAI(api_key=__ChatGPT_TOKEN__)
+        # self.client = openai.OpenAI(api_key=__ChatGPT_TOKEN__)
 
     def random_search_generator(
             self,
@@ -69,47 +63,6 @@ class FindItMethodsUtil:
             results: ImageSearchResponseModel
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         return build_masonry_collage(results)
-
-    def generate_nl_sentense_from_image_query(
-            self,
-            results: TaggerResponseModel,
-            stream: bool = False,
-            model: str = 'gpt-3.5-turbo'
-    ):
-        tags = ', '.join([x.tag + ' : ' + str(round(x.score, 4)) for x in results.results.data.general])
-
-        msg = f"""
-        Using the next list of tags and score with the format tag:score, where tag is the name and score is the importance
-        
-        [{tags}]
-        
-        write a Natural Language sentence using all tags considering the importance of the tag after the :
-        
-        dont respond with the tags, only with a descriptions dont show the scores
-        """
-        messages = [{"role": "system", "content": "You are a helpful assistant."},
-                    {"role": "user", "content": msg}]
-
-        if not stream:
-            # Non-streaming request
-            response = self.client.chat.completions.create(
-                model=model,
-                messages=messages
-            )
-            return response.choices[0].message.content
-        else:
-            response_stream = self.client.chat.completions.create(
-                model=model,
-                messages=messages,
-                stream=True
-            )
-
-            for message in response_stream:
-                if t := message.choices[0].delta.content:
-                    yield f"data: {t}\n\n"
-
-            yield "event: done\ndata: null\n\n"
-            response_stream.close()
 
     def generate_md5_by_url(self,
                             url: str) -> str:
