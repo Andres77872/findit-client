@@ -1,6 +1,7 @@
-import os
-from glob import glob
+import time
 import unittest
+from glob import glob
+
 from findit_client import FindItClient
 from findit_client.exceptions import (ImageNotFetchedException,
                                       ImageSizeTooBigException,
@@ -1373,6 +1374,13 @@ class MyTestCase(unittest.TestCase):
         r = client.tagger.by_booru_image_id(booru_name='gelbooru',
                                             image_id=1)
         print(', '.join([x.tag + ' : ' + str(round(x.score, 4)) for x in r.results.data.general]))
+
+    def test_random_generator_image_speed_001(self):
+        st = time.time()
+        res = client.util.random_search_generator(limit=32,
+                                                  pool=None,
+                                                  content=None)
+        print(len(res.results.data), time.time() - st)
 
     if __name__ == '__main__':
         unittest.main()

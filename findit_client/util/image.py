@@ -1,9 +1,10 @@
-import time
 import io
-import zlib
-import numpy as np
-import cv2
 import threading
+import time
+import zlib
+
+import cv2
+import numpy as np
 import requests
 from PIL import Image
 
@@ -99,7 +100,7 @@ def build_masonry_collage(results: ImageSearchResponseModel) -> tuple[np.ndarray
         return cv2.resize(img, (w, h)), h
 
     def run(url):
-        rq = sess.get(url+'.png', timeout=5, stream=True)
+        rq = sess.get(url + '.png', timeout=5, stream=True)
         arr = np.asarray(bytearray(rq.content), dtype=np.uint8)
         img = cv2.imdecode(arr, -1)
 

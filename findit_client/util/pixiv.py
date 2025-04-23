@@ -1,8 +1,9 @@
-import requests
-import http.cookiejar
-from bs4 import BeautifulSoup
-import json
 import concurrent.futures
+import http.cookiejar
+import json
+
+import requests
+from bs4 import BeautifulSoup
 
 post_url = "https://accounts.pixiv.net/login?lang=zh&source=pc&view_type=page&ref=wwwtop_accounts_index"
 

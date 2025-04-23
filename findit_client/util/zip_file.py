@@ -1,5 +1,5 @@
-import zipfile
 import io
+import zipfile
 
 
 def zip_file(data: list[tuple[str, str]]):

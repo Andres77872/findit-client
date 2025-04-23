@@ -1,8 +1,5 @@
 import numpy as np
 
-from findit_client.models import ImageSearchResponseModel
-from findit_client.models.builder import build_tagger_response
-from findit_client.models.model_tagger import TaggerResponseModel
 from findit_client.api.conextions import (search_by_vector,
                                           embedding_request,
                                           search_by_id,
@@ -13,6 +10,9 @@ from findit_client.api.conextions import (search_by_vector,
                                           random_search_request,
                                           search_by_string_request,
                                           embedding_clip_text_request)
+from findit_client.models import ImageSearchResponseModel
+from findit_client.models.builder import build_tagger_response
+from findit_client.models.model_tagger import TaggerResponseModel
 
 
 class ApiRequests:

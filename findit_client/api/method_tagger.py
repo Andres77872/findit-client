@@ -1,10 +1,9 @@
 from ArZypher import arzypher_decoder
 
-from findit_client.api.const import BOORUS_NAMES_STR, ID_TO_BOORU, X_image_arzypher_params
-from findit_client.exceptions import SearchBooruNotFound
+from findit_client.api.api_requests import ApiRequests
+from findit_client.api.const import X_image_arzypher_params
 from findit_client.models.model_tagger import TaggerResponseModel
 from findit_client.util import load_file_image, load_url_image, load_bytes_image
-from findit_client.api.api_requests import ApiRequests
 
 
 class FindItMethodsTagger:

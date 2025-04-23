@@ -2,13 +2,6 @@ import numpy as np
 import requests
 from ArZypher import arzypher_decoder
 
-from findit_client.exceptions import (EmbeddingException,
-                                      RemoteRawSearchException,
-                                      QueryCantBeDecodedException)
-from findit_client.models.model_search import ImageSearchResponseModel
-from findit_client.models.builder import (build_search_response,
-                                          build_random_search_response)
-from findit_client.util.image import compress_nparr, uncompress_nparr
 from findit_client.api.const import (EMBEDDING_SEARCH_API_PATH,
                                      SEARCH_BY_VECTOR_API_PATH,
                                      RANDOM_GENERATOR_API_PATH,
@@ -17,9 +10,16 @@ from findit_client.api.const import (EMBEDDING_SEARCH_API_PATH,
                                      TAGGER_BY_FILE_API_PATH,
                                      EMBEDDING_GET_VECTOR_BY_BOORU_API_PATH,
                                      TAGGER_BY_VECTOR_API_PATH,
-                                     BOORU_TO_ID,
                                      X_scroll_arzypher_params,
-                                     EMBEDDING_GET_VECTOR_CLIP_TEXT_API_PATH, EMBEDDING_GET_VECTOR_BY_ID_FILE_API_PATH)
+                                     EMBEDDING_GET_VECTOR_CLIP_TEXT_API_PATH,
+                                     EMBEDDING_GET_VECTOR_BY_ID_FILE_API_PATH)
+from findit_client.exceptions import (EmbeddingException,
+                                      RemoteRawSearchException,
+                                      QueryCantBeDecodedException)
+from findit_client.models.builder import (build_search_response,
+                                          build_random_search_response)
+from findit_client.models.model_search import ImageSearchResponseModel
+from findit_client.util.image import compress_nparr, uncompress_nparr
 from findit_client.util.validations import validate_params
 
 sess = requests.Session()

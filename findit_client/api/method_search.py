@@ -1,10 +1,10 @@
 from ArZypher import arzypher_decoder
 
-from findit_client.api.const import ID_TO_BOORU, X_query_arzypher_params, BOORUS_NAMES_STR
+from findit_client.api.api_requests import ApiRequests
+from findit_client.api.const import ID_TO_BOORU, X_query_arzypher_params
 from findit_client.exceptions import QueryCantBeDecodedException
 from findit_client.models import ImageSearchResponseModel
 from findit_client.util import load_file_image, load_url_image, load_bytes_image
-from findit_client.api.api_requests import ApiRequests
 
 
 class FindItMethodsSearch:
