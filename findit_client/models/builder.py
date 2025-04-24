@@ -5,8 +5,13 @@ import time
 import requests
 from ArZypher import arzypher_encoder
 
-from findit_client.api.const import BOORU_TO_ID, BOORU_SOURCE_URL, URL_IMAGE_PROVIDER, X_image_arzypher_params, \
-    X_query_arzypher_params, X_scroll_arzypher_params, ID_TO_BOORU
+from findit_client.api.const import (BOORU_TO_ID,
+                                     BOORU_SOURCE_URL,
+                                     URL_IMAGE_PROVIDER,
+                                     X_image_arzypher_params,
+                                     X_query_arzypher_params,
+                                     X_scroll_arzypher_params,
+                                     ID_TO_BOORU)
 from findit_client.models import ImageSearchResponseModel
 from findit_client.models.model_search import ImageSearchResultRaw
 from findit_client.models.model_tagger import TaggerResponseModel
@@ -31,8 +36,8 @@ def build_search_response(results: dict,
             _r.append({
                 'id': _p['post_id'],
                 'source': BOORU_SOURCE_URL[_p['id_booru'] - 1].format(_p['post_id']),
-                'preview': f'{secrets.choice(URL_IMAGE_PROVIDER)}/{p224}',
-                'img': f'{secrets.choice(URL_IMAGE_PROVIDER)}/{p512}',
+                'preview': f'{URL_IMAGE_PROVIDER[0]}/{p224}',
+                'img': f'{URL_IMAGE_PROVIDER[0]}/{p512}',
                 'score': i[1],
                 'pool': ID_TO_BOORU[_p['id_booru']],
                 'query': query,

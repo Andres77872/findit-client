@@ -13,7 +13,8 @@ client = FindItClient(
     url_api_embedding='https://nn.arz.ai/',
     # url_api_embedding='http://127.0.0.1:7999/',
     url_api_back_search='https://search.arz.ai/',
-    # url_api_back_search='http://127.0.0.1:8000/'
+    # url_api_back_search='http://127.0.0.1:8000/',
+    url_image_backend='http://192.168.1.90:5001/',
 )
 
 local_file = '/home/andres/Pictures/test/0000A3CEA1F8818C260C7E4FA37A80C8.webp'

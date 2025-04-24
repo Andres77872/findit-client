@@ -10,6 +10,7 @@ from findit_client.api.conextions import (search_by_vector,
                                           random_search_request,
                                           search_by_string_request,
                                           embedding_clip_text_request)
+from findit_client.api.const import RANDOM_GENERATOR_API_PATH
 from findit_client.models import ImageSearchResponseModel
 from findit_client.models.builder import build_tagger_response
 from findit_client.models.model_tagger import TaggerResponseModel
@@ -24,6 +25,7 @@ class ApiRequests:
     ):
         self.url_api_embedding = url_api_embedding
         self.url_api_back_search = url_api_back_search
+        self.url_image_backend = kwargs.get('url_image_backend', RANDOM_GENERATOR_API_PATH)
 
     def search_by_ndarray_image_input(
             self,
@@ -46,6 +48,7 @@ class ApiRequests:
     ) -> ImageSearchResponseModel:
         return random_search_request(
             embedding_time=0,
+            url_image_backend=self.url_image_backend,
             **kwargs
         )
 

@@ -4,7 +4,6 @@ from ArZypher import arzypher_decoder
 
 from findit_client.api.const import (EMBEDDING_SEARCH_API_PATH,
                                      SEARCH_BY_VECTOR_API_PATH,
-                                     RANDOM_GENERATOR_API_PATH,
                                      SEARCH_BY_ID_API_PATH,
                                      SEARCH_SCROLL_API_PATH,
                                      TAGGER_BY_FILE_API_PATH,
@@ -96,6 +95,7 @@ def tagger_by_vector_request(
 
 @validate_params
 def random_search_request(
+        url_image_backend: str,
         limit: int = 32,
         pool: list[str] = None,
         content: str = 'g',
@@ -106,15 +106,14 @@ def random_search_request(
         g += 'booru=' + ','.join(pool) + '&'
     if content is not None:
         g += 'content=' + content + '&'
-
-    if (resp := sess.get(RANDOM_GENERATOR_API_PATH + g)) and resp.status_code == 200:
+    if (resp := sess.get(url_image_backend + '/random' + g)) and resp.status_code == 200:
         results = resp.json()
         return build_random_search_response(
             results=results,
             latency_search=resp.elapsed.microseconds / 1000000,
             **kwargs
         )
-    raise RemoteRawSearchException(origin=RANDOM_GENERATOR_API_PATH + g)
+    raise RemoteRawSearchException(origin=url_image_backend + g)
 
 
 @validate_params
