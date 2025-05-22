@@ -5,8 +5,7 @@ import numpy as np
 from findit_client.api.api_requests import ApiRequests
 from findit_client.exceptions import ImageNotFetchedException
 from findit_client.models import ImageSearchResponseModel
-from findit_client.util import load_file_image, load_url_image, load_bytes_image
-from findit_client.util.image import build_masonry_collage
+from findit_client.util import load_file_image, load_bytes_image
 from findit_client.util.pixiv import get_pixiv_image_url, get_crawler_image
 from findit_client.util.zip_file import zip_file
 
@@ -48,8 +47,8 @@ class FindItMethodsUtil:
             url: str,
     ) -> list[float]:
         # Assuming load_url_image is async or will be made async
-        img_array, _ = await load_url_image(image=url,
-                                            pixiv_credentials=self.pixiv_credentials)
+        img_array, _ = await self.ApiRequests.load_url_image(image=url,
+                                                             pixiv_credentials=self.pixiv_credentials)
         return await self.ApiRequests.get_embedding_vector(img_array)
 
     async def image_encoder_by_image_bytes(
@@ -65,14 +64,14 @@ class FindItMethodsUtil:
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         # Assuming build_masonry_collage could be async or CPU-intensive
         # If build_masonry_collage is CPU-intensive, you might want to run it in a separate thread
-        return await build_masonry_collage(results)
+        return await self.ApiRequests.build_masonry_collage(results=results)
 
     async def generate_md5_by_url(self,
                                   url: str) -> str:
         # Assuming load_url_image is async or will be made async
-        content = await load_url_image(image=url,
-                                       get_raw_content=True,
-                                       pixiv_credentials=self.pixiv_credentials)
+        content = await self.ApiRequests.load_url_image(image=url,
+                                                        get_raw_content=True,
+                                                        pixiv_credentials=self.pixiv_credentials)
         return hashlib.md5(bytearray(content)).hexdigest()
 
     async def generate_md5_by_file(self,
@@ -88,9 +87,9 @@ class FindItMethodsUtil:
             async def retry(n, u):
                 for i in ['.png', '.jpg', '.jpeg']:
                     try:
-                        r = await load_url_image(image=u.replace('.png', i),
-                                                 get_raw_content=True,
-                                                 pixiv_credentials=self.pixiv_credentials)
+                        r = await self.ApiRequests.load_url_image(image=u.replace('.png', i),
+                                                                  get_raw_content=True,
+                                                                  pixiv_credentials=self.pixiv_credentials)
                     except ImageNotFetchedException:
                         continue
                     return n.replace('.png', i), r

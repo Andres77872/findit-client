@@ -38,7 +38,7 @@ class FindItMethodsTagger:
             th_character: float = 0.8,
             th_general: float = 0.5
     ) -> TaggerResponseModel:
-        img_array, tm = await load_url_image(url)
+        img_array, tm = await self.ApiRequests.load_url_image(image=url)
         return await self.ApiRequests.tagger_by_ndarray_input(
             img_array=img_array,
             th_rating=th_rating,

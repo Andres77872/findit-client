@@ -21,25 +21,9 @@ from findit_client.util.validations import validate_load_image
 
 # Thread pool for CPU-bound operations
 thread_pool = ThreadPoolExecutor()
+
+
 # Global session
-sess: aiohttp.ClientSession = None
-
-
-async def ensure_session():
-    global sess
-    await init_sess()
-
-
-async def init_sess():
-    """Initialize the global aiohttp session."""
-    global sess
-    sess = aiohttp.ClientSession(headers={'User-Agent': 'findit.moe client -> https://findit.moe'})
-
-
-async def close_sess():
-    """Close the global aiohttp session."""
-    if sess:
-        await sess.close()
 
 
 def normalize(img, normalization_mode=True):
@@ -125,7 +109,8 @@ async def load(img: bytes,
                                       color_schema_rgb, padding_color, mode, origin)
 
 
-async def build_masonry_collage(results: ImageSearchResponseModel) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+async def build_masonry_collage(sess: aiohttp.ClientSession,
+                                results: ImageSearchResponseModel) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     if results.results.count < 4:
         raise TooFewSearchResultsException()
 
@@ -142,7 +127,6 @@ async def build_masonry_collage(results: ImageSearchResponseModel) -> tuple[np.n
         return cv2.resize(img, (w, h)), h
 
     async def fetch_and_process(url):
-        await ensure_session()
         async with sess.get(url + '.png', timeout=5) as rq:
             content = await rq.read()
             # Process in thread pool since cv2 operations are CPU-bound
@@ -219,6 +203,7 @@ async def load_file_image(image: str | list[str],
 
 @validate_load_image
 async def load_url_image(image: str | list[str],
+                         sess: aiohttp.ClientSession,
                          pixiv_credentials: dict = None,
                          get_raw_content: bool = False,
                          **kwargs) -> tuple[np.ndarray, float] | str | bytes:
@@ -238,7 +223,6 @@ async def load_url_image(image: str | list[str],
             await login_in(**pixiv_credentials)
         content = get_image(url=image)
     else:
-        await ensure_session()
         async with sess.get(image, timeout=2) as rq:
             if rq.status != 200:
                 raise ImageNotFetchedException(origin=image)

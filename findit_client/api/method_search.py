@@ -42,7 +42,7 @@ class FindItMethodsSearch:
             rating: list[str] = None,
             **kwargs
     ) -> ImageSearchResponseModel:
-        img_array, tm = await load_url_image(url)
+        img_array, tm = await self.ApiRequests.load_url_image(url)
         return await self.ApiRequests.search_by_ndarray_image_input(
             img_array=img_array,
             pool=pool,
