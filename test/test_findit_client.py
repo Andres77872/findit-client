@@ -9,14 +9,7 @@ from findit_client.exceptions import (ImageNotFetchedException,
                                       SearchBooruNotFound,
                                       TooFewSearchResultsException)
 
-client = FindItClient(
-    url_api_embedding='https://nn.arz.ai/',
-    # url_api_embedding='http://127.0.0.1:7999/',
-    url_api_back_search='https://search.arz.ai/',
-    # url_api_back_search='http://127.0.0.1:8000/',
-    url_image_backend='http://192.168.1.90:5001',
-)
-
+# Instead of creating the client at module level, create it in the setUp method
 local_file = '/home/andres/Pictures/test/0000A3CEA1F8818C260C7E4FA37A80C8.webp'
 local_files = glob('/home/andres/Pictures/test/*.webp')
 all_pool = [
@@ -33,12 +26,41 @@ all_pool = [
 
 
 class MyTestCase(unittest.IsolatedAsyncioTestCase):
+    async def asyncSetUp(self):
+        # Create a new client for each test
+        self.client = FindItClient(
+            url_api_embedding='https://nn.arz.ai/',
+            # url_api_embedding='http://127.0.0.1:7999/',
+            url_api_back_search='https://search.arz.ai/',
+            # url_api_back_search='http://127.0.0.1:8000/',
+            url_image_backend='http://192.168.1.90:5001',
+        )
+
+    async def asyncTearDown(self):
+        # Close all open resources
+        if hasattr(self.client, 'search') and hasattr(self.client.search, 'ApiRequests'):
+            if hasattr(self.client.search.ApiRequests, 'sess') and self.client.search.ApiRequests.sess:
+                await self.client.search.ApiRequests.sess.close()
+
+        if hasattr(self.client, 'tagger') and hasattr(self.client.tagger, 'ApiRequests'):
+            if hasattr(self.client.tagger.ApiRequests, 'sess') and self.client.tagger.ApiRequests.sess:
+                await self.client.tagger.ApiRequests.sess.close()
+
+        if hasattr(self.client, 'util') and hasattr(self.client.util, 'ApiRequests'):
+            if hasattr(self.client.util.ApiRequests, 'sess') and self.client.util.ApiRequests.sess:
+                await self.client.util.ApiRequests.sess.close()
+
+    # Fix the ResourceWarning for the unclosed file
+    async def safe_open_file(self, filepath, mode='rb'):
+        with open(filepath, mode) as f:
+            return f.read()
+
     async def test_search_by_file_image_001(self):
         pool = ['danbooru', 'gelbooru']
         limit = 32
-        r = await client.search.by_file(img=local_file,
-                                  limit=limit,
-                                  pool=pool)
+        r = await self.client.search.by_file(img=local_file,
+                                             limit=limit,
+                                             pool=pool)
         print(r)
         self.assertEqual(limit, r.search_meta.qdrant_meta.config.limit)
         self.assertEqual(pool, r.search_meta.qdrant_meta.config.pools)
@@ -46,50 +68,50 @@ class MyTestCase(unittest.IsolatedAsyncioTestCase):
     async def test_search_by_file_image_002(self):
         pool = ['danbooru', 'gelbooru']
         limit = 128
-        r = await client.search.by_file(img=local_file,
-                                  limit=limit,
-                                  pool=pool)
+        r = await self.client.search.by_file(img=local_file,
+                                             limit=limit,
+                                             pool=pool)
         self.assertEqual(limit, r.search_meta.qdrant_meta.config.limit)
         self.assertEqual(pool, r.search_meta.qdrant_meta.config.pools)
 
     async def test_search_by_file_image_003(self):
         pool = ['danbooru', 'gelbooru']
         limit = 129
-        r = await client.search.by_file(img=local_file,
-                                  limit=limit,
-                                  pool=pool)
+        r = await self.client.search.by_file(img=local_file,
+                                             limit=limit,
+                                             pool=pool)
         self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
         self.assertEqual(pool, r.search_meta.qdrant_meta.config.pools)
 
     async def test_search_by_file_image_004(self):
         pool = ['danbooru', 'gelbooru']
         limit = 0
-        r = await client.search.by_file(img=local_file,
-                                  limit=limit,
-                                  pool=pool)
+        r = await self.client.search.by_file(img=local_file,
+                                             limit=limit,
+                                             pool=pool)
         self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
         self.assertEqual(pool, r.search_meta.qdrant_meta.config.pools)
 
     async def test_search_by_file_image_005(self):
         pool = ['danbooru', 'gelbooru', 'zerochan', 'anime-pictures', 'e-shuushuu', 'yande.re', 'safebooru']
         limit = 32
-        r = await client.search.by_file(img=local_file,
-                                  limit=limit,
-                                  pool=pool)
+        r = await self.client.search.by_file(img=local_file,
+                                             limit=limit,
+                                             pool=pool)
         self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
         self.assertEqual(pool, r.search_meta.qdrant_meta.config.pools)
 
     async def test_search_by_file_image_006(self):
         pool = all_pool
         limit = 32
-        r = await client.search.by_file(img=local_file,
-                                  limit=limit)
+        r = await self.client.search.by_file(img=local_file,
+                                             limit=limit)
         self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
         self.assertEqual(pool, r.search_meta.qdrant_meta.config.pools)
 
     async def test_search_by_file_image_007(self):
         pool = all_pool
-        r = await client.search.by_file(img=local_file)
+        r = await self.client.search.by_file(img=local_file)
         self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
         self.assertEqual(pool, r.search_meta.qdrant_meta.config.pools)
 
@@ -97,85 +119,85 @@ class MyTestCase(unittest.IsolatedAsyncioTestCase):
         pool = all_pool
 
         with self.assertRaises(SearchBooruNotFound):
-            await client.search.by_file(img=local_file,
-                                  pool=pool + ['other'])
+            await self.client.search.by_file(img=local_file,
+                                             pool=pool + ['other'])
 
     async def test_search_by_url_image_000(self):
         pool = all_pool
-        r = await client.search.by_url(url='https://img.arz.ai')
+        r = await self.client.search.by_url(url='https://img.arz.ai')
         self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
         self.assertEqual(pool, r.search_meta.qdrant_meta.config.pools)
 
     async def test_search_by_url_image_001(self):
         with self.assertRaises(ImageNotFetchedException):
-            await client.search.by_url(url='https://img.arz.ai/a')
+            await self.client.search.by_url(url='https://img.arz.ai/a')
 
     async def test_search_by_url_image_002(self):
         with self.assertRaises(ImageSizeTooBigException):
-            await client.search.by_url(
+            await self.client.search.by_url(
                 url='https://cdn.donmai.us/original/07/8c/__nanashi_mumei_hololive_and_1_more_drawn_by_panpanmc4__078c86443fe8f8740c0ae617adb598bb.png')
 
     async def test_search_by_url_image_003(self):
-        await client.search.by_url(
+        await self.client.search.by_url(
             url='https://cdn.donmai.us/original/dd/28/__original_drawn_by_waneella__dd28748e921b423a28029ed1b0dd3332.gif')
 
     async def test_search_by_query_000(self):
         pool = all_pool
-        r = await client.search.by_url(url='https://img.arz.ai/qOaAWsm5', limit=1)
+        r = await self.client.search.by_url(url='https://img.arz.ai/qOaAWsm5', limit=1)
         query = r.results.data[0][0].query
-        r = await client.search.by_query(query=query)
+        r = await self.client.search.by_query(query=query)
         self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
         self.assertEqual(pool, r.search_meta.qdrant_meta.config.pools)
 
     async def test_search_by_query_001(self):
         with self.assertRaises(QueryCantBeDecodedException):
-            await client.search.by_query(query='NOQUERY')
+            await self.client.search.by_query(query='NOQUERY')
 
     async def test_search_by_query_002(self):
         with self.assertRaises(QueryCantBeDecodedException):
-            await client.search.by_query(query='uttDp8FZCJUBGEHa')
+            await self.client.search.by_query(query='uttDp8FZCJUBGEHa')
 
     async def test_search_by_query_003(self):
         pool = all_pool
         query = '88Z8tyzTxJYBDfis'
-        r = await client.search.by_query(query=query)
+        r = await self.client.search.by_query(query=query)
         self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
         self.assertEqual(pool, r.search_meta.qdrant_meta.config.pools)
 
     async def test_search_scroll_000(self):
-        r = await client.search.by_url(url='https://img.arz.ai', limit=32)
-        r = await client.search.scroll(
+        r = await self.client.search.by_url(url='https://img.arz.ai', limit=32)
+        r = await self.client.search.scroll(
             scroll_token=r.scroll_token,
             limit=32)
         self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
 
     async def test_search_scroll_001(self):
-        r = await client.search.by_url(url='https://img.arz.ai', limit=32)
+        r = await self.client.search.by_url(url='https://img.arz.ai', limit=32)
         for i in range(10):
-            r = await client.search.scroll(
+            r = await self.client.search.scroll(
                 scroll_token=r.scroll_token,
                 limit=32)
         # self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
 
     async def test_search_scroll_002(self):
         with self.assertRaises(QueryCantBeDecodedException):
-            await client.search.scroll(
+            await self.client.search.scroll(
                 scroll_token='-9UhbKolbEFF2tnLD92XFi6w8trohvWcJJbHhHzOKgWCemuTmGP8fS90FMWhuXf6hq0fZIr-GImSlqNTB-WW')
 
     async def test_search_by_booru_image_id_000(self):
-        r = await client.search.by_booru_image_id(image_id=1,
-                                            booru_name='gelbooru',
-                                            limit=32)
+        r = await self.client.search.by_booru_image_id(image_id=1,
+                                                       booru_name='gelbooru',
+                                                       limit=32)
         self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
 
     async def test_search_by_booru_image_id_001(self):
-        r = await client.search.by_booru_image_id(image_id=3950483,
-                                            booru_name='zerochan',
-                                            limit=32)
+        r = await self.client.search.by_booru_image_id(image_id=3950483,
+                                                       booru_name='zerochan',
+                                                       limit=32)
         self.assertEqual(32, len(r.results.data))
 
     async def test_search_by_vector_000(self):
-        r = await client.search.by_vector(vector=[
+        r = await self.client.search.by_vector(vector=[
             -0.12229436,
             0.0045484416,
             -0.09138441,
@@ -1205,84 +1227,84 @@ class MyTestCase(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
 
     async def test_tagger_by_file_000(self):
-        r = await client.tagger.by_file(img=local_file)
+        r = await self.client.tagger.by_file(img=local_file)
         print(r)
         self.assertEqual(13, r.results.count)
 
     async def test_tagger_by_file_001(self):
-        r = await client.tagger.by_file(img=local_file,
-                                  th_general=0,
-                                  th_character=0,
-                                  th_rating=0)
+        r = await self.client.tagger.by_file(img=local_file,
+                                             th_general=0,
+                                             th_character=0,
+                                             th_rating=0)
         self.assertEqual(9083, r.results.count)
 
     async def test_tagger_by_file_002(self):
-        r = await client.tagger.by_file(img=local_file,
-                                  th_general=1,
-                                  th_character=1,
-                                  th_rating=1)
+        r = await self.client.tagger.by_file(img=local_file,
+                                             th_general=1,
+                                             th_character=1,
+                                             th_rating=1)
         self.assertEqual(1, r.results.count)
 
     async def test_tagger_by_file_003(self):
-        r = await client.tagger.by_file(img=local_file,
-                                  th_general=1,
-                                  th_character=1,
-                                  th_rating=1)
+        r = await self.client.tagger.by_file(img=local_file,
+                                             th_general=1,
+                                             th_character=1,
+                                             th_rating=1)
         self.assertGreater(0.91, r.results.data.rating[0].score)
         self.assertLess(0.51, r.results.data.rating[0].score)
         self.assertEqual('sensitive', r.results.data.rating[0].tag)
 
     async def test_tagger_by_url_000(self):
-        r = await client.tagger.by_url(url='https://img.arz.ai/qOaAWsm5',
-                                 th_general=0.35,
-                                 th_character=0.8,
-                                 th_rating=0)
+        r = await self.client.tagger.by_url(url='https://img.arz.ai/qOaAWsm5',
+                                            th_general=0.35,
+                                            th_character=0.8,
+                                            th_rating=0)
         self.assertGreater(0.81, r.results.data.rating[0].score)
         self.assertLess(0.51, r.results.data.rating[0].score)
         self.assertEqual('sensitive', r.results.data.rating[0].tag)
         self.assertEqual(31, r.results.count)
 
     async def test_tagger_by_query_000(self):
-        r = await client.tagger.by_query(query='hAfAMxp9')
+        r = await self.client.tagger.by_query(query='hAfAMxp9')
         self.assertGreater(0.77, r.results.data.rating[0].score)
         self.assertLess(0.49, r.results.data.rating[0].score)
         self.assertEqual('general', r.results.data.rating[0].tag)
         self.assertEqual(19, r.results.count)
 
     async def test_tagger_by_booru_image_id_000(self):
-        r = await client.tagger.by_booru_image_id(booru_name='gelbooru', image_id=1)
+        r = await self.client.tagger.by_booru_image_id(booru_name='gelbooru', image_id=1)
         self.assertGreater(0.95, r.results.data.rating[0].score)
         self.assertLess(0.56, r.results.data.rating[0].score)
         self.assertEqual('sensitive', r.results.data.rating[0].tag)
         self.assertEqual(10, r.results.count)
 
     async def test_random_search_generator_000(self):
-        r = await client.util.random_search_generator()
+        r = await self.client.util.random_search_generator()
         self.assertEqual(32, r.results.count)
 
     async def test_random_search_generator_001(self):
-        r = await client.util.random_search_generator(limit=128)
+        r = await self.client.util.random_search_generator(limit=128)
         self.assertEqual(128, r.results.count)
 
     async def test_random_search_generator_002(self):
-        r = await client.util.random_search_generator(limit=0)
+        r = await self.client.util.random_search_generator(limit=0)
         self.assertEqual(32, r.results.count)
 
     async def test_random_search_generator_003(self):
-        r = await client.util.random_search_generator(limit=-10)
+        r = await self.client.util.random_search_generator(limit=-10)
         self.assertEqual(32, r.results.count)
 
     async def test_random_search_generator_004(self):
-        r = await client.util.random_search_generator(limit=128,
-                                                pool=['danbooru'])
+        r = await self.client.util.random_search_generator(limit=128,
+                                                           pool=['danbooru'])
 
         for i in r.results.data:
             for j in i:
                 self.assertEqual('danbooru', j.pool)
 
     async def test_masonry_000(self):
-        r = await client.search.by_url(url='https://img.arz.ai', limit=16)
-        r = await client.util.generate_masonry_collage(r)
+        r = await self.client.search.by_url(url='https://img.arz.ai', limit=16)
+        r = await self.client.util.generate_masonry_collage(r)
 
         self.assertEqual(3, len(r))
         self.assertEqual(1024, max(r[0].shape))
@@ -1290,24 +1312,24 @@ class MyTestCase(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(256, max(r[2].shape))
 
     async def test_masonry_001(self):
-        r = await client.search.by_url(url='https://img.arz.ai', limit=3)
+        r = await self.client.search.by_url(url='https://img.arz.ai', limit=3)
         with self.assertRaises(TooFewSearchResultsException):
-            await client.util.generate_masonry_collage(r)
+            await self.client.util.generate_masonry_collage(r)
 
     async def test_embedding_000(self):
-        r = await client.util.image_encoder_by_url(url='https://img.arz.ai')
+        r = await self.client.util.image_encoder_by_url(url='https://img.arz.ai')
         self.assertEqual(1024, len(r))
 
     async def test_embedding_001(self):
-        r = await client.util.image_encoder_by_file(img=local_file)
+        r = await self.client.util.image_encoder_by_file(img=local_file)
         self.assertEqual(1024, len(r))
 
     async def test_search_by_string_000(self):
         pool = ['danbooru', 'zerochan', 'gelbooru']
         limit = 32
-        r = await client.search.by_text(text='a fox girl',
-                                  limit=limit,
-                                  pool=pool)
+        r = await self.client.search.by_text(text='a fox girl',
+                                             limit=limit,
+                                             pool=pool)
         print(r)
         self.assertEqual(limit, r.search_meta.qdrant_meta.config.limit)
         self.assertEqual(['danbooru', 'zerochan', 'gelbooru'], r.search_meta.qdrant_meta.config.pools)
@@ -1315,50 +1337,51 @@ class MyTestCase(unittest.IsolatedAsyncioTestCase):
     async def test_search_by_string_scroll_000(self):
         pool = ['zerochan']
         limit = 32
-        r = await client.search.by_text(text='a fox girl',
-                                  limit=limit,
-                                  pool=pool)
+        r = await self.client.search.by_text(text='a fox girl',
+                                             limit=limit,
+                                             pool=pool)
         print(r)
-        r = await client.search.scroll(r.scroll_token, limit=limit)
-        r = await client.search.scroll(r.scroll_token, limit=limit)
-        r = await client.search.scroll(r.scroll_token, limit=limit)
-        r = await client.search.scroll(r.scroll_token, limit=limit)
+        r = await self.client.search.scroll(r.scroll_token, limit=limit)
+        r = await self.client.search.scroll(r.scroll_token, limit=limit)
+        r = await self.client.search.scroll(r.scroll_token, limit=limit)
+        r = await self.client.search.scroll(r.scroll_token, limit=limit)
         self.assertEqual(limit, r.search_meta.qdrant_meta.config.limit)
         # self.assertEqual(['zerochan'], r.search_meta.qdrant_meta.config.pools)
 
     async def test_search_by_url_image_pixiv_000(self):
         pool = all_pool
-        r = await client.search.by_url(url='https://i.pximg.net/img-original/img/2023/08/03/05/29/49/110480732_p0.jpg')
+        r = await self.client.search.by_url(
+            url='https://i.pximg.net/img-original/img/2023/08/03/05/29/49/110480732_p0.jpg')
         self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
         self.assertEqual(pool, r.search_meta.qdrant_meta.config.pools)
 
     async def test_search_by_url_image_pixiv_001(self):
-        r2 = await client.util.generate_md5_by_url(
+        r2 = await self.client.util.generate_md5_by_url(
             url='https://i.pximg.net/img-original/img/2023/08/03/05/29/49/110480732_p0.jpg')
         self.assertEqual('8de186e88781d7550827011a67f19fdb', r2)
 
     async def test_pixiv_download_original_by_id_002(self):
-        # r = await client.util.download_pixiv_image(idx=110480732, token='TOKEN')
-        r = await client.util.download_pixiv_image(idx=110480732, token=None)
+        # r = await self.client.util.download_pixiv_image(idx=110480732, token='TOKEN')
+        r = await self.client.util.download_pixiv_image(idx=110480732, token=None)
         with open('/mnt/RAID5/findit.moe/temp/a.zip', 'wb') as f:
             f.write(r)
 
     async def test_search_by_batch_file_image_001(self):
         limit = 32
-        r = await client.search.by_file(img=local_files,
-                                  limit=limit)
+        r = await self.client.search.by_file(img=local_files,
+                                             limit=limit)
         print(r)
 
     async def test_X(self):
-        r = await client.tagger.by_booru_image_id(booru_name='gelbooru',
-                                            image_id=1)
+        r = await self.client.tagger.by_booru_image_id(booru_name='gelbooru',
+                                                       image_id=1)
         print(', '.join([x.tag + ' : ' + str(round(x.score, 4)) for x in r.results.data.general]))
 
     async def test_random_generator_image_speed_001(self):
         st = time.time()
-        res = await client.util.random_search_generator(limit=32,
-                                                  pool=None,
-                                                  content=None)
+        res = await self.client.util.random_search_generator(limit=32,
+                                                             pool=None,
+                                                             content=None)
         print(len(res.results.data), time.time() - st)
 
 
