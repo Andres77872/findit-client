@@ -6,7 +6,6 @@ from findit_client.api.method_util import FindItMethodsUtil
 class FindItBase:
     def __init__(self,
                  __version__: str,
-                 private_key: str,
                  **kwargs):
         self.__version__ = __version__
         self.search = FindItMethodsSearch(__version__=__version__, **kwargs)
