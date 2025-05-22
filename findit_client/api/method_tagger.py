@@ -13,15 +13,15 @@ class FindItMethodsTagger:
         self.ApiRequests = ApiRequests(**kwargs)
         self.__version__ = __version__
 
-    def by_file(
+    async def by_file(
             self,
             img: str,
             th_rating: float = 0.35,
             th_character: float = 0.8,
             th_general: float = 0.5
     ) -> TaggerResponseModel:
-        img_array, tm = load_file_image(img)
-        return self.ApiRequests.tagger_by_ndarray_input(
+        img_array, tm = await load_file_image(img)
+        return await self.ApiRequests.tagger_by_ndarray_input(
             img_array=img_array,
             th_rating=th_rating,
             th_character=th_character,
@@ -31,15 +31,15 @@ class FindItMethodsTagger:
             api_version=self.__version__
         )
 
-    def by_url(
+    async def by_url(
             self,
             url: str,
             th_rating: float = 0.35,
             th_character: float = 0.8,
             th_general: float = 0.5
     ) -> TaggerResponseModel:
-        img_array, tm = load_url_image(url)
-        return self.ApiRequests.tagger_by_ndarray_input(
+        img_array, tm = await load_url_image(url)
+        return await self.ApiRequests.tagger_by_ndarray_input(
             img_array=img_array,
             th_rating=th_rating,
             th_character=th_character,
@@ -49,15 +49,15 @@ class FindItMethodsTagger:
             api_version=self.__version__
         )
 
-    def by_image_bytes(
+    async def by_image_bytes(
             self,
             img: bytes,
             th_rating: float = 0.35,
             th_character: float = 0.8,
             th_general: float = 0.5
     ) -> TaggerResponseModel:
-        img_array, tm = load_bytes_image(img)
-        return self.ApiRequests.tagger_by_ndarray_input(
+        img_array, tm = await load_bytes_image(img)
+        return await self.ApiRequests.tagger_by_ndarray_input(
             img_array=img_array,
             th_rating=th_rating,
             th_character=th_character,
@@ -67,7 +67,7 @@ class FindItMethodsTagger:
             api_version=self.__version__
         )
 
-    def by_booru_image_id(
+    async def by_booru_image_id(
             self,
             booru_name: str,
             image_id: int,
@@ -75,7 +75,7 @@ class FindItMethodsTagger:
             th_character: float = 0.8,
             th_general: float = 0.5
     ) -> TaggerResponseModel:
-        return self.ApiRequests.tagger_by_booru_image_id(
+        return await self.ApiRequests.tagger_by_booru_image_id(
             id_vector=image_id,
             booru_name=booru_name,
             th_rating=th_rating,
@@ -86,7 +86,7 @@ class FindItMethodsTagger:
             api_version=self.__version__
         )
 
-    def by_query(
+    async def by_query(
             self,
             query: str,
             th_rating: float = 0.35,
@@ -95,7 +95,7 @@ class FindItMethodsTagger:
     ) -> TaggerResponseModel:
         (image_id, _), _ = arzypher_decoder(**X_image_arzypher_params,
                                             encoded=query)
-        return self.ApiRequests.tagger_by_booru_image_id(
+        return await self.ApiRequests.tagger_by_booru_image_id(
             id_vector=image_id,
             th_rating=th_rating,
             th_character=th_character,

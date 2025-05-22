@@ -1,21 +1,45 @@
+import asyncio
 import io
-import threading
 import time
 import zlib
+from concurrent.futures import ThreadPoolExecutor
 
+import aiohttp
 import cv2
 import numpy as np
-import requests
 from PIL import Image
 
 from findit_client.exceptions import (ImageNotLoadedException,
                                       ImageNotFetchedException,
                                       ImageSizeTooBigException,
                                       ImageRemoteNotAsImageContentTypeException,
-                                      ImageRemoteNoContentLengthFoundException, TooFewSearchResultsException)
+                                      ImageRemoteNoContentLengthFoundException,
+                                      TooFewSearchResultsException)
 from findit_client.models import ImageSearchResponseModel
 from findit_client.util.pixiv import check_login, login_in, get_image
 from findit_client.util.validations import validate_load_image
+
+# Thread pool for CPU-bound operations
+thread_pool = ThreadPoolExecutor()
+# Global session
+sess: aiohttp.ClientSession = None
+
+
+async def ensure_session():
+    global sess
+    await init_sess()
+
+
+async def init_sess():
+    """Initialize the global aiohttp session."""
+    global sess
+    sess = aiohttp.ClientSession(headers={'User-Agent': 'findit.moe client -> https://findit.moe'})
+
+
+async def close_sess():
+    """Close the global aiohttp session."""
+    if sess:
+        await sess.close()
 
 
 def normalize(img, normalization_mode=True):
@@ -26,15 +50,16 @@ def normalize(img, normalization_mode=True):
     return img
 
 
-def load(img: bytes,
-         width: int = 448,
-         height: int = 448,
-         normalization_mode: bool | None = None,
-         color_schema_rgb: bool = False,
-         padding_color: int = 255,
-         mode: str = None,
-         origin: str = None
-         ):
+def _load_image_sync(img: bytes,
+                     width: int = 448,
+                     height: int = 448,
+                     normalization_mode: bool | None = None,
+                     color_schema_rgb: bool = False,
+                     padding_color: int = 255,
+                     mode: str = None,
+                     origin: str = None
+                     ):
+    """Synchronous version of image loading logic (CPU-bound)"""
     try:
         image_bytes = io.BytesIO(img)
         with Image.open(image_bytes) as image:
@@ -83,7 +108,24 @@ def load(img: bytes,
         raise ImageNotLoadedException(mode=mode, origin=origin)
 
 
-def build_masonry_collage(results: ImageSearchResponseModel) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+async def load(img: bytes,
+               width: int = 448,
+               height: int = 448,
+               normalization_mode: bool | None = None,
+               color_schema_rgb: bool = False,
+               padding_color: int = 255,
+               mode: str = None,
+               origin: str = None
+               ):
+    """Async wrapper for image loading (runs in thread pool)"""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(thread_pool,
+                                      _load_image_sync,
+                                      img, width, height, normalization_mode,
+                                      color_schema_rgb, padding_color, mode, origin)
+
+
+async def build_masonry_collage(results: ImageSearchResponseModel) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     if results.results.count < 4:
         raise TooFewSearchResultsException()
 
@@ -99,32 +141,51 @@ def build_masonry_collage(results: ImageSearchResponseModel) -> tuple[np.ndarray
 
         return cv2.resize(img, (w, h)), h
 
-    def run(url):
-        rq = sess.get(url + '.png', timeout=5, stream=True)
-        arr = np.asarray(bytearray(rq.content), dtype=np.uint8)
+    async def fetch_and_process(url):
+        await ensure_session()
+        async with sess.get(url + '.png', timeout=5) as rq:
+            content = await rq.read()
+            # Process in thread pool since cv2 operations are CPU-bound
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(thread_pool, process_image, content)
+
+    def process_image(content):
+        arr = np.asarray(bytearray(content), dtype=np.uint8)
         img = cv2.imdecode(arr, -1)
 
         if img.shape[2] == 3:
             img = cv2.cvtColor(img, cv2.COLOR_RGB2RGBA)
 
-        input_image, h = resize_local(img)
+        return resize_local(img)
 
+    # Create tasks for all image fetches
+    tasks = []
+    for i in results.results.data:
+        tasks.append(fetch_and_process(i[0].img + '?access'))
+
+    # Wait for all tasks to complete
+    results = await asyncio.gather(*tasks)
+
+    # Process results
+    for input_image, h in results:
         col.sort(key=lambda x: x[0])
         col[0][0] += h
         col[0][1].append(input_image / 255)
 
-    th = []
-    for idx, i in enumerate(results.results.data):
-        th.append(threading.Thread(target=run, args=[i[0].img + '?access']))
-        th[-1].start()
-    for i in th:
-        i.join()
+    # Final processing - this is CPU-bound, so run in thread pool
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(thread_pool, finalize_collage, col)
 
+
+def finalize_collage(col):
     hm = min(col, key=lambda x: x[0])[0]
     hm = min([hm, 1024])
     for x, i in enumerate(col):
         col[x] = np.concatenate(i[1], axis=0)[:hm]
     col = np.concatenate(col, axis=1)
+
+    resize_local = lambda img, sz=256: (cv2.resize(img, (sz, int(img.shape[0] / (img.shape[1] / sz)))),
+                                        int(img.shape[0] / (img.shape[1] / sz)))
 
     p5 = resize_local(col, 512)[0]
     p2 = resize_local(col, 256)[0]
@@ -133,8 +194,8 @@ def build_masonry_collage(results: ImageSearchResponseModel) -> tuple[np.ndarray
 
 
 @validate_load_image
-def load_file_image(image: str | list[str],
-                    **kwargs) -> tuple[np.ndarray, float]:
+async def load_file_image(image: str | list[str],
+                          **kwargs) -> tuple[np.ndarray, float]:
     """
     :param image: Image as numpy array or image URL
     :param width: Image width destination (optional)
@@ -145,23 +206,22 @@ def load_file_image(image: str | list[str],
     :return: A tuple of (raw image (if selected), raw shape, resized image)
     """
     st = time.time()
-    with open(image, "rb") as f:
-        i = load(img=f.read(),
-                 mode='file',
-                 origin=image,
-                 **kwargs)
-        return i, time.time() - st
+    # File I/O can be slow, so run in thread pool
+    loop = asyncio.get_event_loop()
+    file_content = await loop.run_in_executor(thread_pool, lambda: open(image, "rb").read())
 
-
-sess = requests.Session()
-sess.headers['User-Agent'] = 'findit.moe client -> https://findit.moe'
+    i = await load(img=file_content,
+                   mode='file',
+                   origin=image,
+                   **kwargs)
+    return i, time.time() - st
 
 
 @validate_load_image
-def load_url_image(image: str | list[str],
-                   pixiv_credentials: dict = None,
-                   get_raw_content: bool = False,
-                   **kwargs) -> tuple[np.ndarray, float] | str | bytes:
+async def load_url_image(image: str | list[str],
+                         pixiv_credentials: dict = None,
+                         get_raw_content: bool = False,
+                         **kwargs) -> tuple[np.ndarray, float] | str | bytes:
     """
     :param image: Image as numpy array or image URL
     :param width: Image width destination (optional)
@@ -175,35 +235,42 @@ def load_url_image(image: str | list[str],
 
     if image.startswith('https://i.pximg.net'):
         if not check_login():
-            login_in(**pixiv_credentials)
-        rq = get_image(url=image)
+            await login_in(**pixiv_credentials)
+        content = get_image(url=image)
     else:
-        rq = sess.get(image, timeout=2, stream=True)
-    if rq.status_code != 200:
-        raise ImageNotFetchedException(origin=image)
+        await ensure_session()
+        async with sess.get(image, timeout=2) as rq:
+            if rq.status != 200:
+                raise ImageNotFetchedException(origin=image)
 
-    if 'image' not in rq.headers['Content-Type']:
-        raise ImageRemoteNotAsImageContentTypeException(origin=image)
-    if 'Content-Length' not in rq.headers:
-        raise ImageRemoteNoContentLengthFoundException(origin=image)
-    if int(rq.headers['Content-Length']) > 8000000:
-        raise ImageSizeTooBigException(origin=image,
-                                       limit=8000000,
-                                       size=int(rq.headers['Content-Length']))
+            content_type = rq.headers.get('Content-Type', '')
+            if 'image' not in content_type:
+                raise ImageRemoteNotAsImageContentTypeException(origin=image)
+
+            content_length = rq.headers.get('Content-Length')
+            if not content_length:
+                raise ImageRemoteNoContentLengthFoundException(origin=image)
+
+            if int(content_length) > 8000000:
+                raise ImageSizeTooBigException(origin=image,
+                                               limit=8000000,
+                                               size=int(content_length))
+
+            content = await rq.read()
 
     if get_raw_content:
-        return rq.content
+        return content
 
-    i = load(img=rq.content,
-             mode='file',
-             origin=image,
-             **kwargs)
+    i = await load(img=content,
+                   mode='file',
+                   origin=image,
+                   **kwargs)
     return i, time.time() - st
 
 
 @validate_load_image
-def load_bytes_image(image: bytes | list[bytes],
-                     **kwargs) -> tuple[np.ndarray, float]:
+async def load_bytes_image(image: bytes | list[bytes],
+                           **kwargs) -> tuple[np.ndarray, float]:
     """
     :param image: Image as numpy array or image URL
     :param width: Image width destination (optional)
@@ -214,19 +281,20 @@ def load_bytes_image(image: bytes | list[bytes],
     :return: A tuple of (raw image (if selected), raw shape, resized image)
     """
     st = time.time()
-    i = load(img=image,
-             mode='file',
-             origin='upload',
-             **kwargs)
+    i = await load(img=image,
+                   mode='file',
+                   origin='upload',
+                   **kwargs)
     return i, time.time() - st
 
 
+# These functions are CPU-bound and relatively simple, so keeping them synchronous
 def compress_nparr(nparr: np.ndarray):
     bytestream = io.BytesIO()
     np.save(bytestream, nparr)
     uncompressed = bytestream.getvalue()
     compressed = zlib.compress(uncompressed)
-    return compressed  # , len(uncompressed), len(compressed)
+    return compressed
 
 
 def uncompress_nparr(bytestring):

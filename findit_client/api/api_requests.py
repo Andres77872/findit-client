@@ -9,13 +9,14 @@ from findit_client.models.builder import build_tagger_response
 from findit_client.models.model_tagger import TaggerResponseModel
 
 
-def cache_function():
+def async_cache_function():
     def decorator(func):
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            result = func(*args, **kwargs)
-            return result
+        async def wrapper(*args, **kwargs):
+            return await func(*args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
@@ -27,7 +28,7 @@ class ApiRequests:
             cache_decorator=None,
             **kwargs
     ):
-        self.cache_decorator = cache_decorator or cache_function
+        self.cache_decorator = cache_decorator or async_cache_function
         self.url_api_embedding = url_api_embedding
         self.url_api_back_search = url_api_back_search
         self.url_image_backend = kwargs.get('url_image_backend', RANDOM_GENERATOR_API_PATH)
@@ -44,84 +45,86 @@ class ApiRequests:
         self.search_by_string_request = self.cache_decorator()(conextions.search_by_string_request)
         self.embedding_clip_text_request = self.cache_decorator()(conextions.embedding_clip_text_request)
 
-    def search_by_ndarray_image_input(
+    async def search_by_ndarray_image_input(
             self,
             img_array: np.ndarray,
             **kwargs
     ) -> ImageSearchResponseModel:
-        vector, tm = self.embedding_request(
+        vector, tm = await self.embedding_request(
             img_array=img_array,
             url_api_embedding=self.url_api_embedding)
-        return self.search_by_vector(
+        return await self.search_by_vector(
             url=self.url_api_back_search,
             vector=vector,
             embedding_time=tm,
             **kwargs
         )
 
-    def generate_random_response(
+    async def generate_random_response(
             self,
             **kwargs
     ) -> ImageSearchResponseModel:
-        return self.random_search_request(
+        return await self.random_search_request(
             embedding_time=0,
             url_image_backend=self.url_image_backend,
             **kwargs
         )
 
-    def search_by_vector_input(
+    async def search_by_vector_input(
             self,
             vector: list,
             **kwargs
     ) -> ImageSearchResponseModel:
-        return self.search_by_vector(
+        return await self.search_by_vector(
             url=self.url_api_back_search,
             vector=vector,
             embedding_time=0,
             **kwargs
         )
 
-    def search_by_booru_image_id(
+    async def search_by_booru_image_id(
             self,
             **kwargs
     ) -> ImageSearchResponseModel:
-        return self.search_by_id(
+        return await self.search_by_id(
             url=self.url_api_back_search,
             embedding_time=0,
             **kwargs
         )
 
-    def search_by_string(
+    async def search_by_string(
             self,
             text: str,
             **kwargs
     ) -> ImageSearchResponseModel:
-        vector, tm = self.embedding_clip_text_request(text=text,
-                                                      url_api_embedding=self.url_api_embedding)
+        vector, tm = await self.embedding_clip_text_request(
+            text=text,
+            url_api_embedding=self.url_api_embedding
+        )
 
-        return self.search_by_string_request(
+        return await self.search_by_string_request(
             vector=vector,
             url=self.url_api_back_search,
             embedding_time=tm,
             **kwargs
         )
 
-    def search_scroll(
+    async def search_scroll(
             self,
             **kwargs
     ) -> ImageSearchResponseModel:
-        return self.search_by_scroll(
+        return await self.search_by_scroll(
             url=self.url_api_back_search,
             embedding_time=0,
             **kwargs
         )
 
-    def tagger_by_ndarray_input(
+    async def tagger_by_ndarray_input(
             self,
             img_array: np.ndarray,
             **kwargs
     ) -> TaggerResponseModel:
-        tags, tm = self.tagger_by_file_request(
+        tags, tm = await self.tagger_by_file_request(
             img_array=img_array,
             url_api_embedding=self.url_api_embedding)
 
@@ -131,19 +134,19 @@ class ApiRequests:
             **kwargs
         )
 
-    def tagger_by_booru_image_id(
+    async def tagger_by_booru_image_id(
             self,
             id_vector: int,
             booru_name: str = None,
             **kwargs
     ) -> TaggerResponseModel:
-        vector, tm1 = self.get_vector_by_id_request(
+        vector, tm1 = await self.get_vector_by_id_request(
             url=self.url_api_back_search,
             id_vector=id_vector,
             booru_name=booru_name
         )
 
-        tags, tm2 = self.tagger_by_vector_request(
+        tags, tm2 = await self.tagger_by_vector_request(
             vector=vector,
             url_api_embedding=self.url_api_embedding)
 
@@ -153,11 +156,11 @@ class ApiRequests:
             **kwargs
         )
 
-    def get_embedding_vector(
+    async def get_embedding_vector(
             self,
             img_array: np.ndarray,
     ) -> list[float]:
-        vector, _ = self.embedding_request(
+        vector, _ = await self.embedding_request(
             img_array=img_array,
             url_api_embedding=self.url_api_embedding)
         return vector
