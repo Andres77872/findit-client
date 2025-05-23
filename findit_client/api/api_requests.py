@@ -48,7 +48,7 @@ class ApiRequests:
         self.tagger_by_file_request = self.cache_decorator()(conextions.tagger_by_file_request)
         self.get_vector_by_id_request = self.cache_decorator()(conextions.get_vector_by_id_request)
         self.tagger_by_vector_request = self.cache_decorator()(conextions.tagger_by_vector_request)
-        self.random_search_request = self.cache_decorator()(conextions.random_search_request)
+        self.random_search_request = conextions.random_search_request
         self.search_by_string_request = self.cache_decorator()(conextions.search_by_string_request)
         self.embedding_clip_text_request = self.cache_decorator()(conextions.embedding_clip_text_request)
         self._load_url_image = self.cache_decorator()(util.load_url_image)
@@ -57,8 +57,27 @@ class ApiRequests:
     async def initialize(self):
         """Initialize the client session if not already provided."""
         if self.sess is None:
+            # Configure connector with higher limits
+            connector = aiohttp.TCPConnector(
+                limit=100,  # Total connection pool size
+                limit_per_host=30,  # Max connections per host
+                ttl_dns_cache=300,  # DNS cache TTL
+                use_dns_cache=True,
+                keepalive_timeout=30,
+                enable_cleanup_closed=True
+            )
+
+            # Configure timeout
+            timeout = aiohttp.ClientTimeout(
+                total=5,  # Increased from 2 seconds
+                connect=5,
+                sock_read=5
+            )
+
             self.sess = aiohttp.ClientSession(
-                headers={'User-Agent': 'findit.moe client -> https://findit.moe'}
+                headers={'User-Agent': 'findit.moe client -> https://findit.moe'},
+                connector=connector,
+                timeout=timeout
             )
             self._own_session = True
         return self
