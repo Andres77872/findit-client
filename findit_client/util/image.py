@@ -206,6 +206,7 @@ async def load_url_image(image: str | list[str],
                          sess: aiohttp.ClientSession,
                          pixiv_credentials: dict = None,
                          get_raw_content: bool = False,
+                         request_timeout: int = None,
                          **kwargs) -> tuple[np.ndarray, float] | str | bytes:
     """
     :param image: Image as numpy array or image URL
@@ -223,7 +224,8 @@ async def load_url_image(image: str | list[str],
             await login_in(**pixiv_credentials)
         content = get_image(url=image)
     else:
-        async with sess.get(image, timeout=2) as rq:
+        timeout = aiohttp.ClientTimeout(total=request_timeout) if request_timeout else None
+        async with sess.get(image, timeout=timeout) as rq:
             if rq.status != 200:
                 raise ImageNotFetchedException(origin=image)
 

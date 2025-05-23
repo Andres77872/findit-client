@@ -1,3 +1,5 @@
+import asyncio
+
 import aiohttp
 import numpy as np
 from ArZypher import arzypher_decoder
@@ -17,7 +19,8 @@ from findit_client.api.const import (
 from findit_client.exceptions import (
     EmbeddingException,
     RemoteRawSearchException,
-    QueryCantBeDecodedException, )
+    QueryCantBeDecodedException,
+    EmbeddingTimeoutException, )
 from findit_client.models.builder import (
     build_search_response,
     build_random_search_response,
@@ -51,12 +54,17 @@ async def nn_model_request(session: aiohttp.ClientSession, url: str, nparr: np.n
     data = compress_nparr(nparr)
     form = aiohttp.FormData()
     form.add_field('obj', data)
-    async with session.post(url=url, data=form) as resp:
-        if resp.status == 200:
-            content = await resp.read()
-            elapsed = resp.elapsed.total_seconds() if hasattr(resp, 'elapsed') else 0
-            return uncompress_nparr(content)[0].tolist(), elapsed
-    return None
+
+    try:
+        async with session.post(url=url, data=form) as resp:
+            if resp.status == 200:
+                content = await resp.read()
+                elapsed = resp.elapsed.total_seconds() if hasattr(resp, 'elapsed') else 0
+                return uncompress_nparr(content)[0].tolist(), elapsed
+            else:
+                return None
+    except asyncio.TimeoutError:
+        raise EmbeddingTimeoutException(origin=url)
 
 
 async def embedding_request(
