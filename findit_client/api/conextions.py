@@ -1,100 +1,126 @@
+import asyncio
+
+import aiohttp
 import numpy as np
-import requests
 from ArZypher import arzypher_decoder
 
-from findit_client.api.const import (EMBEDDING_SEARCH_API_PATH,
-                                     SEARCH_BY_VECTOR_API_PATH,
-                                     SEARCH_BY_ID_API_PATH,
-                                     SEARCH_SCROLL_API_PATH,
-                                     TAGGER_BY_FILE_API_PATH,
-                                     EMBEDDING_GET_VECTOR_BY_BOORU_API_PATH,
-                                     TAGGER_BY_VECTOR_API_PATH,
-                                     X_scroll_arzypher_params,
-                                     EMBEDDING_GET_VECTOR_CLIP_TEXT_API_PATH,
-                                     EMBEDDING_GET_VECTOR_BY_ID_FILE_API_PATH)
-from findit_client.exceptions import (EmbeddingException,
-                                      RemoteRawSearchException,
-                                      QueryCantBeDecodedException)
-from findit_client.models.builder import (build_search_response,
-                                          build_random_search_response)
+from findit_client.api.const import (
+    EMBEDDING_SEARCH_API_PATH,
+    SEARCH_BY_VECTOR_API_PATH,
+    SEARCH_BY_ID_API_PATH,
+    SEARCH_SCROLL_API_PATH,
+    TAGGER_BY_FILE_API_PATH,
+    EMBEDDING_GET_VECTOR_BY_BOORU_API_PATH,
+    TAGGER_BY_VECTOR_API_PATH,
+    X_scroll_arzypher_params,
+    EMBEDDING_GET_VECTOR_CLIP_TEXT_API_PATH,
+    EMBEDDING_GET_VECTOR_BY_ID_FILE_API_PATH,
+)
+from findit_client.exceptions import (
+    EmbeddingException,
+    RemoteRawSearchException,
+    QueryCantBeDecodedException,
+    EmbeddingTimeoutException, )
+from findit_client.models.builder import (
+    build_search_response,
+    build_random_search_response,
+)
 from findit_client.models.model_search import ImageSearchResponseModel
 from findit_client.util.image import compress_nparr, uncompress_nparr
 from findit_client.util.validations import validate_params
 
-sess = requests.Session()
-sess.verify = True
-sess.headers['User-Agent'] = 'findit.moe client -> https://findit.moe'
 
-
-def search_response(url: str,
-                    js: dict = None,
-                    **kwargs) -> ImageSearchResponseModel | None:
+async def search_response(session: aiohttp.ClientSession, url: str, js: dict = None,
+                          **kwargs) -> ImageSearchResponseModel | None:
     j = {}
     if js:
         j.update(js)
     if kwargs:
         j.update(kwargs)
-
-    if (resp := sess.post(url, json=j)) and resp.status_code == 200:
-        results = resp.json()
-        # print(results)
-        tm = resp.elapsed.microseconds / 1000000 - results['time']
-        return build_search_response(
-            results=results,
-            latency_search=tm,
-            **kwargs
-        )
+    async with session.post(url, json=j) as resp:
+        if resp.status == 200:
+            results = await resp.json()
+            elapsed = resp.elapsed.total_seconds() if hasattr(resp, 'elapsed') else 0
+            tm = elapsed - results.get('time', 0)
+            return build_search_response(
+                results=results,
+                latency_search=tm,
+                **kwargs
+            )
     return None
 
 
-def nn_model_request(url: str, nparr: np.ndarray) -> tuple[list, float] | None:
-    if (resp := sess.post(url=url, files={'obj': compress_nparr(nparr)})) and resp.status_code == 200:
-        return uncompress_nparr(resp.content)[0].tolist(), resp.elapsed.microseconds / 1000000
-    return None
+async def nn_model_request(session: aiohttp.ClientSession, url: str, nparr: np.ndarray) -> tuple[list, float] | None:
+    data = compress_nparr(nparr)
+    form = aiohttp.FormData()
+    form.add_field('obj', data)
+
+    try:
+        async with session.post(url=url, data=form) as resp:
+            if resp.status == 200:
+                content = await resp.read()
+                elapsed = resp.elapsed.total_seconds() if hasattr(resp, 'elapsed') else 0
+                return uncompress_nparr(content)[0].tolist(), elapsed
+            else:
+                return None
+    except asyncio.TimeoutError:
+        raise EmbeddingTimeoutException(origin=url)
 
 
-def embedding_request(
+async def embedding_request(
+        session: aiohttp.ClientSession,
         img_array: np.ndarray,
         url_api_embedding: str
 ) -> tuple[list, float]:
     url = url_api_embedding + EMBEDDING_SEARCH_API_PATH
-    if (rp := nn_model_request(url, img_array)) and rp:
+    rp = await nn_model_request(session, url, img_array)
+    if rp:
         return rp
     raise EmbeddingException(origin=url)
 
 
-def embedding_clip_text_request(
+async def embedding_clip_text_request(
+        session: aiohttp.ClientSession,
         text: str,
         url_api_embedding: str
 ) -> tuple[list, float]:
     url = url_api_embedding + EMBEDDING_GET_VECTOR_CLIP_TEXT_API_PATH
-    if (resp := sess.post(url=url, data={'text': text})) and resp.status_code == 200:
-        return resp.json(), resp.elapsed.microseconds / 1000000
+    data = {'text': text}
+    async with session.post(url=url, data=data) as resp:
+        if resp.status == 200:
+            vec = await resp.json()
+            elapsed = resp.elapsed.total_seconds() if hasattr(resp, 'elapsed') else 0
+            return vec, elapsed
     raise EmbeddingException(origin=url)
 
 
-def tagger_by_file_request(
+async def tagger_by_file_request(
+        session: aiohttp.ClientSession,
         img_array: np.ndarray,
         url_api_embedding: str
 ) -> tuple[list, float]:
     url = url_api_embedding + TAGGER_BY_FILE_API_PATH
-    if (rp := nn_model_request(url, img_array)) and rp:
+    rp = await nn_model_request(session, url, img_array)
+    if rp:
         return rp
     raise EmbeddingException(origin=url)
 
 
-def tagger_by_vector_request(
+async def tagger_by_vector_request(
+        session: aiohttp.ClientSession,
         vector: np.ndarray,
         url_api_embedding: str
 ) -> tuple[list, float]:
     url = url_api_embedding + TAGGER_BY_VECTOR_API_PATH
-    if (rp := nn_model_request(url, vector)) and rp:
+    rp = await nn_model_request(session, url, vector)
+    if rp:
         return rp
     raise EmbeddingException(origin=url)
 
 
 @validate_params
-def random_search_request(
+async def random_search_request(
+        session: aiohttp.ClientSession,
         url_image_backend: str,
         limit: int = 32,
         pool: list[str] = None,
@@ -106,48 +132,57 @@ def random_search_request(
         g += 'booru=' + ','.join(pool) + '&'
     if content is not None:
         g += 'content=' + content + '&'
-    if (resp := sess.get(url_image_backend + '/random' + g)) and resp.status_code == 200:
-        results = resp.json()
-        return build_random_search_response(
-            results=results,
-            latency_search=resp.elapsed.microseconds / 1000000,
-            **kwargs
-        )
+    async with session.get(url_image_backend + '/random' + g) as resp:
+        if resp.status == 200:
+            results = await resp.json()
+            elapsed = resp.elapsed.total_seconds() if hasattr(resp, 'elapsed') else 0
+            return build_random_search_response(
+                results=results,
+                latency_search=elapsed,
+                **kwargs
+            )
     raise RemoteRawSearchException(origin=url_image_backend + g)
 
 
 @validate_params
-def search_by_vector(
+async def search_by_vector(
+        session: aiohttp.ClientSession,
         url: str,
         **kwargs
 ) -> ImageSearchResponseModel:
-    if (sh := search_response(url + SEARCH_BY_VECTOR_API_PATH, **kwargs)) and sh:
+    sh = await search_response(session, url + SEARCH_BY_VECTOR_API_PATH, **kwargs)
+    if sh:
         return sh
     raise RemoteRawSearchException(origin=url)
 
 
 @validate_params
-def search_by_string_request(
+async def search_by_string_request(
+        session: aiohttp.ClientSession,
         url: str,
         **kwargs
 ) -> ImageSearchResponseModel:
-    if (sh := search_response(url + SEARCH_BY_VECTOR_API_PATH, **kwargs)) and sh:
+    sh = await search_response(session, url + SEARCH_BY_VECTOR_API_PATH, **kwargs)
+    if sh:
         return sh
     raise RemoteRawSearchException(origin=url)
 
 
 @validate_params
-def search_by_id(
+async def search_by_id(
+        session: aiohttp.ClientSession,
         url: str,
         **kwargs
 ) -> ImageSearchResponseModel:
-    if (sh := search_response(url + SEARCH_BY_ID_API_PATH, **kwargs)) and sh:
+    sh = await search_response(session, url + SEARCH_BY_ID_API_PATH, **kwargs)
+    if sh:
         return sh
     raise RemoteRawSearchException(origin=url)
 
 
 @validate_params
-def search_scroll(
+async def search_scroll(
+        session: aiohttp.ClientSession,
         url: str,
         scroll_token: str,
         limit: str,
@@ -167,27 +202,32 @@ def search_scroll(
         'rating': rating
     }
 
-    # print(js)
-
-    if (sh := search_response(url + SEARCH_SCROLL_API_PATH, js, **kwargs)) and sh:
+    sh = await search_response(session, url + SEARCH_SCROLL_API_PATH, js, **kwargs)
+    if sh:
         return sh
     raise RemoteRawSearchException(origin=url)
 
 
 @validate_params
-def get_vector_by_id_request(
+async def get_vector_by_id_request(
+        session: aiohttp.ClientSession,
         url: str,
         id_vector: int,
         booru_name: str
 ) -> tuple[np.ndarray, float]:
     if booru_name:
         url = url + EMBEDDING_GET_VECTOR_BY_BOORU_API_PATH
-        if (resp := sess.post(url, json={'id_vector': id_vector, 'pool': booru_name})) and resp.status_code == 200:
-            results = resp.json()
-            return np.array(results)[None], resp.elapsed.microseconds / 1000000
+        payload = {'id_vector': id_vector, 'pool': booru_name}
+        async with session.post(url, json=payload) as resp:
+            if resp.status == 200:
+                results = await resp.json()
+                elapsed = resp.elapsed.total_seconds() if hasattr(resp, 'elapsed') else 0
+                return np.array(results)[None], elapsed
     else:
         url = url + EMBEDDING_GET_VECTOR_BY_ID_FILE_API_PATH + '/' + str(id_vector)
-        if (resp := sess.post(url)) and resp.status_code == 200:
-            results = resp.json()
-            return np.array(results)[None], resp.elapsed.microseconds / 1000000
+        async with session.post(url) as resp:
+            if resp.status == 200:
+                results = await resp.json()
+                elapsed = resp.elapsed.total_seconds() if hasattr(resp, 'elapsed') else 0
+                return np.array(results)[None], elapsed
     raise RemoteRawSearchException(origin=url)

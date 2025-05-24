@@ -69,8 +69,7 @@ def check_login():
 def get_image(url: str):
     check_url = url
     rq = session.get(check_url, allow_redirects=False, timeout=2, stream=True)
-    print(rq)
-    return rq
+    return rq.content
 
 
 session_raw = requests.session()

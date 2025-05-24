@@ -14,7 +14,7 @@ class FindItMethodsSearch:
         self.ApiRequests = ApiRequests(**kwargs)
         self.__version__ = __version__
 
-    def by_file(
+    async def by_file(
             self,
             img: str | list[str],
             pool: list[str] = None,
@@ -22,8 +22,8 @@ class FindItMethodsSearch:
             rating: list[str] = None,
             **kwargs
     ) -> ImageSearchResponseModel:
-        img_array, tm = load_file_image(img)
-        return self.ApiRequests.search_by_ndarray_image_input(
+        img_array, tm = await load_file_image(img)
+        return await self.ApiRequests.search_by_ndarray_image_input(
             img_array=img_array,
             pool=pool,
             limit=limit,
@@ -34,7 +34,7 @@ class FindItMethodsSearch:
             **kwargs
         )
 
-    def by_url(
+    async def by_url(
             self,
             url: str,
             pool: list[str] = None,
@@ -42,8 +42,8 @@ class FindItMethodsSearch:
             rating: list[str] = None,
             **kwargs
     ) -> ImageSearchResponseModel:
-        img_array, tm = load_url_image(url)
-        return self.ApiRequests.search_by_ndarray_image_input(
+        img_array, tm = await self.ApiRequests.load_url_image(url)
+        return await self.ApiRequests.search_by_ndarray_image_input(
             img_array=img_array,
             pool=pool,
             limit=limit,
@@ -54,7 +54,7 @@ class FindItMethodsSearch:
             **kwargs
         )
 
-    def by_image_bytes(
+    async def by_image_bytes(
             self,
             img: bytes,
             pool: list[str] = None,
@@ -62,8 +62,8 @@ class FindItMethodsSearch:
             rating: list[str] = None,
             **kwargs
     ) -> ImageSearchResponseModel:
-        img_array, tm = load_bytes_image(img)
-        return self.ApiRequests.search_by_ndarray_image_input(
+        img_array, tm = await load_bytes_image(img)
+        return await self.ApiRequests.search_by_ndarray_image_input(
             img_array=img_array,
             pool=pool,
             limit=limit,
@@ -74,7 +74,7 @@ class FindItMethodsSearch:
             **kwargs
         )
 
-    def by_booru_image_id(
+    async def by_booru_image_id(
             self,
             booru_name: str,
             image_id: int,
@@ -83,7 +83,7 @@ class FindItMethodsSearch:
             rating: list[str] = None,
             **kwargs
     ) -> ImageSearchResponseModel:
-        return self.ApiRequests.search_by_booru_image_id(
+        return await self.ApiRequests.search_by_booru_image_id(
             id_vector=image_id,
             pool_vector=booru_name,
             pool=pool,
@@ -95,7 +95,7 @@ class FindItMethodsSearch:
             **kwargs
         )
 
-    def by_query(
+    async def by_query(
             self,
             query: str,
             pool: list[str] = None,
@@ -109,7 +109,7 @@ class FindItMethodsSearch:
             raise QueryCantBeDecodedException(query=query)
         (booru_id, image_id) = dec
 
-        return self.ApiRequests.search_by_booru_image_id(
+        return await self.ApiRequests.search_by_booru_image_id(
             id_vector=image_id,
             pool_vector=ID_TO_BOORU[booru_id],
             pool=pool,
@@ -121,7 +121,7 @@ class FindItMethodsSearch:
             **kwargs
         )
 
-    def by_vector(
+    async def by_vector(
             self,
             vector: list,
             pool: list[str] = None,
@@ -129,7 +129,7 @@ class FindItMethodsSearch:
             rating: list[str] = None,
             **kwargs
     ) -> ImageSearchResponseModel:
-        return self.ApiRequests.search_by_vector_input(
+        return await self.ApiRequests.search_by_vector_input(
             vector=vector,
             pool=pool,
             limit=limit,
@@ -140,7 +140,7 @@ class FindItMethodsSearch:
             **kwargs
         )
 
-    def by_text(
+    async def by_text(
             self,
             text: str,
             pool: list[str] = None,
@@ -148,7 +148,7 @@ class FindItMethodsSearch:
             rating: list[str] = None,
             **kwargs
     ) -> ImageSearchResponseModel:
-        return self.ApiRequests.search_by_string(
+        return await self.ApiRequests.search_by_string(
             use_sem=True,
             text=text,
             pool=pool,
@@ -160,14 +160,14 @@ class FindItMethodsSearch:
             **kwargs
         )
 
-    def scroll(
+    async def scroll(
             self,
             scroll_token: str,
             limit: int = 32,
             rating: list[str] = None,
             **kwargs
     ) -> ImageSearchResponseModel:
-        return self.ApiRequests.search_scroll(
+        return await self.ApiRequests.search_scroll(
             limit=limit,
             rating=rating,
             scroll_token=scroll_token,

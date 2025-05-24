@@ -1,7 +1,9 @@
 import functools
 
+import aiohttp
 import numpy as np
 
+from findit_client import util
 from findit_client.api import conextions
 from findit_client.api.const import RANDOM_GENERATOR_API_PATH
 from findit_client.models import ImageSearchResponseModel
@@ -9,13 +11,14 @@ from findit_client.models.builder import build_tagger_response
 from findit_client.models.model_tagger import TaggerResponseModel
 
 
-def cache_function():
+def async_cache_function():
     def decorator(func):
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            result = func(*args, **kwargs)
-            return result
+        async def wrapper(*args, **kwargs):
+            return await func(*args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
@@ -25,12 +28,17 @@ class ApiRequests:
             url_api_embedding: str,
             url_api_back_search: str,
             cache_decorator=None,
+            session: aiohttp.ClientSession = None,
             **kwargs
     ):
-        self.cache_decorator = cache_decorator or cache_function
+        self.cache_decorator = cache_decorator or async_cache_function
         self.url_api_embedding = url_api_embedding
         self.url_api_back_search = url_api_back_search
         self.url_image_backend = kwargs.get('url_image_backend', RANDOM_GENERATOR_API_PATH)
+
+        # Store the provided session or create a new one
+        self.sess = session
+        self._own_session = session is None  # Track if we created our own session
 
         # Wrap only specific methods
         self.embedding_request = self.cache_decorator()(conextions.embedding_request)
@@ -40,88 +48,155 @@ class ApiRequests:
         self.tagger_by_file_request = self.cache_decorator()(conextions.tagger_by_file_request)
         self.get_vector_by_id_request = self.cache_decorator()(conextions.get_vector_by_id_request)
         self.tagger_by_vector_request = self.cache_decorator()(conextions.tagger_by_vector_request)
-        self.random_search_request = self.cache_decorator()(conextions.random_search_request)
+        self.random_search_request = conextions.random_search_request
         self.search_by_string_request = self.cache_decorator()(conextions.search_by_string_request)
         self.embedding_clip_text_request = self.cache_decorator()(conextions.embedding_clip_text_request)
+        self._load_url_image = self.cache_decorator()(util.load_url_image)
+        self._build_masonry_collage = self.cache_decorator()(util.build_masonry_collage)
 
-    def search_by_ndarray_image_input(
+    async def initialize(self):
+        """Initialize the client session if not already provided."""
+        if self.sess is None:
+            # Configure connector with higher limits
+            connector = aiohttp.TCPConnector(
+                limit=100,  # Total connection pool size
+                limit_per_host=30,  # Max connections per host
+                ttl_dns_cache=300,  # DNS cache TTL
+                use_dns_cache=True,
+                keepalive_timeout=30,
+                enable_cleanup_closed=True
+            )
+
+            # Configure timeout
+            timeout = aiohttp.ClientTimeout(
+                total=5,  # Increased from 2 seconds
+                connect=5,
+                sock_read=5
+            )
+
+            self.sess = aiohttp.ClientSession(
+                headers={'User-Agent': 'findit.moe client -> https://findit.moe'},
+                connector=connector,
+                timeout=timeout
+            )
+            self._own_session = True
+        return self
+
+    async def close(self):
+        """Close the session if we created it."""
+        if self._own_session and self.sess is not None:
+            await self.sess.close()
+            self.sess = None
+
+    async def __aenter__(self):
+        """Support using this class as an async context manager."""
+        return await self.initialize()
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Cleanup when exiting the context manager."""
+        await self.close()
+
+    async def _ensure_session(self):
+        """Ensure a session exists before making requests"""
+        if self.sess is None:
+            await self.initialize()
+
+    async def search_by_ndarray_image_input(
             self,
             img_array: np.ndarray,
             **kwargs
     ) -> ImageSearchResponseModel:
-        vector, tm = self.embedding_request(
+        await self._ensure_session()
+        vector, tm = await self.embedding_request(
+            session=self.sess,
             img_array=img_array,
             url_api_embedding=self.url_api_embedding)
-        return self.search_by_vector(
+        return await self.search_by_vector(
+            session=self.sess,
             url=self.url_api_back_search,
             vector=vector,
             embedding_time=tm,
             **kwargs
         )
 
-    def generate_random_response(
+    async def generate_random_response(
             self,
             **kwargs
     ) -> ImageSearchResponseModel:
-        return self.random_search_request(
+        await self._ensure_session()
+        return await self.random_search_request(
+            session=self.sess,
             embedding_time=0,
             url_image_backend=self.url_image_backend,
             **kwargs
         )
 
-    def search_by_vector_input(
+    async def search_by_vector_input(
             self,
             vector: list,
             **kwargs
     ) -> ImageSearchResponseModel:
-        return self.search_by_vector(
+        await self._ensure_session()
+        return await self.search_by_vector(
+            session=self.sess,
             url=self.url_api_back_search,
             vector=vector,
             embedding_time=0,
             **kwargs
         )
 
-    def search_by_booru_image_id(
+    async def search_by_booru_image_id(
             self,
             **kwargs
     ) -> ImageSearchResponseModel:
-        return self.search_by_id(
+        await self._ensure_session()
+        return await self.search_by_id(
+            session=self.sess,
             url=self.url_api_back_search,
             embedding_time=0,
             **kwargs
         )
 
-    def search_by_string(
+    async def search_by_string(
             self,
             text: str,
             **kwargs
     ) -> ImageSearchResponseModel:
-        vector, tm = self.embedding_clip_text_request(text=text,
-                                                      url_api_embedding=self.url_api_embedding)
+        await self._ensure_session()
+        vector, tm = await self.embedding_clip_text_request(
+            session=self.sess,
+            text=text,
+            url_api_embedding=self.url_api_embedding
+        )
 
-        return self.search_by_string_request(
+        return await self.search_by_string_request(
+            session=self.sess,
             vector=vector,
             url=self.url_api_back_search,
             embedding_time=tm,
             **kwargs
         )
 
-    def search_scroll(
+    async def search_scroll(
             self,
             **kwargs
     ) -> ImageSearchResponseModel:
-        return self.search_by_scroll(
+        await self._ensure_session()
+        return await self.search_by_scroll(
+            session=self.sess,
             url=self.url_api_back_search,
             embedding_time=0,
             **kwargs
         )
 
-    def tagger_by_ndarray_input(
+    async def tagger_by_ndarray_input(
             self,
             img_array: np.ndarray,
             **kwargs
     ) -> TaggerResponseModel:
-        tags, tm = self.tagger_by_file_request(
+        await self._ensure_session()
+        tags, tm = await self.tagger_by_file_request(
+            session=self.sess,
             img_array=img_array,
             url_api_embedding=self.url_api_embedding)
 
@@ -131,19 +206,22 @@ class ApiRequests:
             **kwargs
         )
 
-    def tagger_by_booru_image_id(
+    async def tagger_by_booru_image_id(
             self,
             id_vector: int,
             booru_name: str = None,
             **kwargs
     ) -> TaggerResponseModel:
-        vector, tm1 = self.get_vector_by_id_request(
+        await self._ensure_session()
+        vector, tm1 = await self.get_vector_by_id_request(
+            session=self.sess,
             url=self.url_api_back_search,
             id_vector=id_vector,
             booru_name=booru_name
         )
 
-        tags, tm2 = self.tagger_by_vector_request(
+        tags, tm2 = await self.tagger_by_vector_request(
+            session=self.sess,
             vector=vector,
             url_api_embedding=self.url_api_embedding)
 
@@ -153,11 +231,28 @@ class ApiRequests:
             **kwargs
         )
 
-    def get_embedding_vector(
+    async def get_embedding_vector(
             self,
             img_array: np.ndarray,
     ) -> list[float]:
-        vector, _ = self.embedding_request(
+        await self._ensure_session()
+        vector, _ = await self.embedding_request(
+            session=self.sess,
             img_array=img_array,
             url_api_embedding=self.url_api_embedding)
         return vector
+
+    async def load_url_image(
+            self,
+            image: str,
+            **kwargs
+    ):
+        await self._ensure_session()
+        return await self._load_url_image(image=image, sess=self.sess, **kwargs)
+
+    async def build_masonry_collage(
+            self,
+            **kwargs
+    ):
+        await self._ensure_session()
+        return await self._build_masonry_collage(sess=self.sess, **kwargs)

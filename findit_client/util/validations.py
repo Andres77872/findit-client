@@ -45,11 +45,11 @@ def validate_params(func):
 
 
 def validate_load_image(func):
-    def wrapper(image: str | bytes | list[str | bytes], *args, **kwargs):
+    async def wrapper(image: str | bytes | list[str | bytes], *args, **kwargs):
         if isinstance(image, str | bytes):
-            res = func(image, *args, **kwargs)
+            res = await func(image, *args, **kwargs)
         else:
-            res = [func(x, *args, **kwargs) for x in image]
+            res = [await func(x, *args, **kwargs) for x in image]
             tm = sum([x[1] for x in res])
             np_image = np.concatenate(np.array([x[0] for x in res]), axis=0, dtype=res[0][0].dtype)
             res = np_image, tm

@@ -13,6 +13,12 @@ class EmbeddingException(Exception):
         super().__init__(self.message)
 
 
+class EmbeddingTimeoutException(Exception):
+    def __init__(self, origin, message="Embedding timeout error"):
+        self.message = message + ', origin: ' + origin
+        super().__init__(self.message)
+
+
 class RemoteRawSearchException(Exception):
     def __init__(self, origin, message="Error in remote search engine"):
         self.message = message + ', origin: ' + origin
