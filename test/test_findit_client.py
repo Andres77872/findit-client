@@ -31,8 +31,8 @@ class MyTestCase(unittest.IsolatedAsyncioTestCase):
         self.client = FindItClient(
             url_api_embedding='https://nn.arz.ai/',
             # url_api_embedding='http://127.0.0.1:7999/',
-            url_api_back_search='https://search.arz.ai/',
-            # url_api_back_search='http://127.0.0.1:8000/',
+            # url_api_back_search='https://search.arz.ai/',
+            url_api_back_search='http://127.0.0.1:8002/',
             url_image_backend='http://192.168.1.90:5001',
         )
 
@@ -144,7 +144,7 @@ class MyTestCase(unittest.IsolatedAsyncioTestCase):
     async def test_search_by_query_000(self):
         pool = all_pool
         r = await self.client.search.by_url(url='https://img.arz.ai/qOaAWsm5', limit=1)
-        query = r.results.data[0][0].query
+        query = r.results.data[0].content[0].query
         r = await self.client.search.by_query(query=query)
         self.assertEqual(32, r.search_meta.qdrant_meta.config.limit)
         self.assertEqual(pool, r.search_meta.qdrant_meta.config.pools)
@@ -1299,7 +1299,7 @@ class MyTestCase(unittest.IsolatedAsyncioTestCase):
                                                            pool=['danbooru'])
 
         for i in r.results.data:
-            for j in i:
+            for j in i.content:
                 self.assertEqual('danbooru', j.pool)
 
     async def test_masonry_000(self):

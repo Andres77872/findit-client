@@ -1,10 +1,8 @@
 import json
-import secrets
 import time
 
 import requests
 from ArZypher import arzypher_encoder
-
 from findit_client.api.const import (BOORU_TO_ID,
                                      BOORU_SOURCE_URL,
                                      URL_IMAGE_PROVIDER,
@@ -41,10 +39,10 @@ def build_search_response(results: dict,
                 'score': i[1],
                 'pool': ID_TO_BOORU[_p['id_booru']],
                 'query': query,
-                'size': i[3],
-                'color': i[4]
+                'size': i[4],
+                'color': i[5]
             })
-        rl.append(_r)
+        rl.append({'content': _r, 'vector': i[3]})
 
     ok_count = [
         results['results']['search_id'],
@@ -93,7 +91,7 @@ def build_random_search_response(results: list[dict],
             'size': [_p['X-Width'], _p['X-Height']],
             'color': _p['X-Color']
         })
-        rl.append(_r)
+        rl.append({'content': _r, 'vector': []})
 
     dc = {
         'search_meta': {

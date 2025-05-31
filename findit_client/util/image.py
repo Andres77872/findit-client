@@ -145,7 +145,7 @@ async def build_masonry_collage(sess: aiohttp.ClientSession,
     # Create tasks for all image fetches
     tasks = []
     for i in results.results.data:
-        tasks.append(fetch_and_process(i[0].img + '?access'))
+        tasks.append(fetch_and_process(i.content[0].img + '?access'))
 
     # Wait for all tasks to complete
     results = await asyncio.gather(*tasks)

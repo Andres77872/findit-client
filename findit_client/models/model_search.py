@@ -1,6 +1,5 @@
-from pydantic import BaseModel
-
 from findit_client.models.model_common import ResultCommonStatusMeta
+from pydantic import BaseModel
 
 
 class ImageSearchResultSingleModel(BaseModel):
@@ -15,9 +14,14 @@ class ImageSearchResultSingleModel(BaseModel):
     color: str
 
 
+class ImageSearchResultModel(BaseModel):
+    content: list[ImageSearchResultSingleModel]
+    vector: list[float]
+
+
 class ImageSearchResultListModel(BaseModel):
     count: int
-    data: list[list[ImageSearchResultSingleModel]]
+    data: list[ImageSearchResultModel]
 
 
 class ImageSearchResultQdrantConfigMeta(BaseModel):
