@@ -55,7 +55,7 @@ class FindItMethodsUtil:
             self,
             image_file: bytes,
     ) -> list[float]:
-        img_array, _ = load_bytes_image(image_file)
+        img_array, _ = await load_bytes_image(image_file)
         return await self.ApiRequests.get_embedding_vector(img_array)
 
     async def generate_masonry_collage(
